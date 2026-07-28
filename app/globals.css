@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  color-scheme: light;
+}
+
+html {
+  font-size: 17px !important;
+  color-scheme: light !important;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px !important;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-indigo-650: #463cd5;
+  --color-indigo-750: #3b31c1;
+  --color-indigo-755: #372db8;
+}
+body {
+  background: var(--background);
+  color: var(--foreground) !important;
+  font-family: Arial, Helvetica, sans-serif;
+  color-scheme: light !important;
+}
+
+/* Guarantee dark text fallback for light layout elements to prevent prefers-color-scheme dark conflicts */
+.bg-white, .bg-slate-50, .bg-slate-100, .bg-indigo-50, .bg-emerald-50, .bg-rose-50 {
+  color: #1e293b;
+}
+
+.bg-white h1, .bg-white h2, .bg-white h3, .bg-white h4,
+.bg-slate-50 h1, .bg-slate-50 h2, .bg-slate-50 h3, .bg-slate-50 h4 {
+  color: #0f172a;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  header, footer, nav, aside, .print\:hidden, [role="navigation"] {
+    display: none !important;
+  }
+
+  .print\:w-full {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  .bg-slate-900 {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .bg-slate-50 {
+    background-color: #f8fafc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Global Form Readability Overrides */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="search"],
+input[type="password"],
+select,
+textarea {
+  font-size: 1.05rem !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  padding-top: 0.55rem !important;
+  padding-bottom: 0.55rem !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+header input, .bg-slate-900 input, .bg-slate-950 input {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+label {
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Typography Utility Scaling Overrides for Readability */
+.text-\[9px\] {
+  font-size: 0.75rem !important;
+}
+.text-\[10px\] {
+  font-size: 0.8rem !important;
+}
+.text-\[11px\] {
+  font-size: 0.85rem !important;
+}
+.text-xs {
+  font-size: 0.9rem !important;
+}
+.text-sm {
+  font-size: 1.0rem !important;
+}
+.text-base {
+  font-size: 1.15rem !important;
+}
+.text-lg {
+  font-size: 1.3rem !important;
+}
+.text-xl {
+  font-size: 1.5rem !important;
+}
+.text-2xl {
+  font-size: 1.8rem !important;
+}
+.text-3xl {
+  font-size: 2.2rem !important;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
