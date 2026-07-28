@@ -1,7 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { getInvoices, getBusinessProfile, getClients } from "@/lib/db";
-import { getInvoiceQrDataUrl } from "@/lib/qr";
+import { getInvoiceQrDataUrl, getInvoiceUpiUri } from "@/lib/qr";
 import InvoiceDetailView from "@/components/InvoiceDetailView";
 
 export const revalidate = 0;
@@ -23,6 +23,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
   }
 
   const qrCodeDataUrl = await getInvoiceQrDataUrl(profile, invoice);
+  const upiUri = getInvoiceUpiUri(profile, invoice);
 
-  return <InvoiceDetailView invoice={invoice} profile={profile} clients={clients} qrCodeDataUrl={qrCodeDataUrl} />;
+  return <InvoiceDetailView invoice={invoice} profile={profile} clients={clients} qrCodeDataUrl={qrCodeDataUrl} upiUri={upiUri} />;
 }

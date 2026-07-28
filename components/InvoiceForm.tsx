@@ -21,11 +21,16 @@ interface InvoiceFormProps {
 interface FormLineItem {
   id: string;
   description: string;
+  url: string;
   quantity: number;
   unit: string;
   rate: number;
   discountPercent: number;
   taxPercent: number;
+  // UI-only: when "total", the user enters the agreed total amount for this
+  // line and the per-unit rate is back-calculated from quantity - useful when
+  // a flat price was negotiated up front and hours are logged afterward.
+  entryMode: "rate" | "total";
 }
 
 function todayIso() {
@@ -72,22 +77,26 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
       return invoice.lineItems.map((item) => ({
         id: String(item.slNo),
         description: item.description,
+        url: item.url || "",
         quantity: item.quantity,
         unit: item.unit,
         rate: item.rate,
         discountPercent: item.discountPercent,
         taxPercent: item.taxPercent,
+        entryMode: "rate" as const,
       }));
     }
     return [
       {
         id: "1",
         description: "",
+        url: "",
         quantity: 1,
         unit: "hrs",
         rate: 0,
         discountPercent: 0,
         taxPercent: profile.defaultTaxPercent || 0,
+        entryMode: "rate" as const,
       },
     ];
   });
@@ -116,11 +125,13 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
       {
         id: nextId,
         description: "",
+        url: "",
         quantity: 1,
         unit: "hrs",
         rate: 0,
         discountPercent: 0,
         taxPercent: profile.defaultTaxPercent || 0,
+        entryMode: "rate",
       },
     ]);
   };
@@ -132,6 +143,39 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
 
   const updateLineItem = (id: string, fields: Partial<FormLineItem>) => {
     setLineItems(lineItems.map((item) => (item.id === id ? { ...item, ...fields } : item)));
+  };
+
+  // Quantity changes need special handling in "total" entry mode: the agreed
+  // total amount stays fixed and the per-unit rate is re-derived from it,
+  // instead of the total drifting as quantity changes.
+  const updateQuantity = (id: string, newQuantity: number) => {
+    setLineItems(
+      lineItems.map((item) => {
+        if (item.id !== id) return item;
+        if (item.entryMode === "total") {
+          const targetTotal = item.quantity * item.rate;
+          const newRate = newQuantity > 0 ? targetTotal / newQuantity : item.rate;
+          return { ...item, quantity: newQuantity, rate: newRate };
+        }
+        return { ...item, quantity: newQuantity };
+      })
+    );
+  };
+
+  // In "total" mode the user types the agreed total for the line and we
+  // back-calculate the per-unit rate from the current quantity.
+  const updateTotalAmount = (id: string, newTotal: number) => {
+    setLineItems(
+      lineItems.map((item) => {
+        if (item.id !== id) return item;
+        const newRate = item.quantity > 0 ? newTotal / item.quantity : 0;
+        return { ...item, rate: newRate };
+      })
+    );
+  };
+
+  const setEntryMode = (id: string, mode: "rate" | "total") => {
+    updateLineItem(id, { entryMode: mode });
   };
 
   // Live calculations
@@ -188,6 +232,7 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
       clientId: selectedClientId,
       lineItems: validLineItems.map((item) => ({
         description: item.description,
+        url: item.url.trim() || null,
         quantity: Number(item.quantity) || 1,
         unit: item.unit,
         rate: Number(item.rate) || 0,
@@ -407,18 +452,63 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                       )}
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                        Description *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. UI design for landing page"
-                        value={item.description}
-                        onChange={(e) => updateLineItem(item.id, { description: e.target.value })}
-                        className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                          Description *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. UI design for landing page"
+                          value={item.description}
+                          onChange={(e) => updateLineItem(item.id, { description: e.target.value })}
+                          className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                          Link (optional) - e.g. deployed app / repo URL
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://your-app.vercel.app"
+                          value={item.url}
+                          onChange={(e) => updateLineItem(item.id, { url: e.target.value })}
+                          className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Enter by:</span>
+                      <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200 text-[11px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setEntryMode(item.id, "rate")}
+                          className={cn(
+                            "px-2.5 py-1 rounded-md transition-colors",
+                            item.entryMode === "rate" ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50"
+                          )}
+                        >
+                          Rate / Unit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEntryMode(item.id, "total")}
+                          className={cn(
+                            "px-2.5 py-1 rounded-md transition-colors",
+                            item.entryMode === "total" ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50"
+                          )}
+                        >
+                          Total Agreed Amount
+                        </button>
+                      </div>
+                      {item.entryMode === "total" && (
+                        <span className="text-[10px] text-slate-400 font-semibold">
+                          &asymp; {formatCurrency(item.rate, profile.currency)} / {item.unit || "unit"}
+                        </span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -432,7 +522,7 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                           step="any"
                           required
                           value={item.quantity}
-                          onChange={(e) => updateLineItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                          onChange={(e) => updateQuantity(item.id, parseFloat(e.target.value) || 0)}
                           className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white font-mono"
                         />
                       </div>
@@ -450,20 +540,37 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Rate
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          required
-                          value={item.rate}
-                          onChange={(e) => updateLineItem(item.id, { rate: parseFloat(e.target.value) || 0 })}
-                          className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
-                        />
-                      </div>
+                      {item.entryMode === "total" ? (
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            Total Amount
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                            value={Math.round(item.quantity * item.rate * 100) / 100}
+                            onChange={(e) => updateTotalAmount(item.id, parseFloat(e.target.value) || 0)}
+                            className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                            Rate
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                            value={item.rate}
+                            onChange={(e) => updateLineItem(item.id, { rate: parseFloat(e.target.value) || 0 })}
+                            className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
+                          />
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">

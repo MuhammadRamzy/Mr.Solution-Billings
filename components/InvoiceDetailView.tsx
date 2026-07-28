@@ -21,6 +21,7 @@ import {
   QrCode,
   Mail,
   Loader2,
+  BellRing,
 } from "lucide-react";
 import { Invoice, BusinessProfile, Client, Payment } from "@/lib/types";
 import {
@@ -29,6 +30,7 @@ import {
   recordPaymentAction,
   deletePaymentAction,
   sendInvoiceEmailAction,
+  sendPaymentReminderAction,
 } from "@/app/actions";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import InvoiceForm from "./InvoiceForm";
@@ -39,6 +41,7 @@ interface InvoiceDetailViewProps {
   profile: BusinessProfile;
   clients: Client[];
   qrCodeDataUrl?: string | null;
+  upiUri?: string | null;
 }
 
 const PAYMENT_METHODS: { value: Payment["method"]; label: string }[] = [
@@ -60,7 +63,7 @@ const STATUS_STYLES: Record<string, string> = {
   overdue: "bg-rose-50 text-rose-700",
 };
 
-export default function InvoiceDetailView({ invoice: initialInvoice, profile, clients, qrCodeDataUrl }: InvoiceDetailViewProps) {
+export default function InvoiceDetailView({ invoice: initialInvoice, profile, clients, qrCodeDataUrl, upiUri }: InvoiceDetailViewProps) {
   const router = useRouter();
   const [invoice, setInvoice] = useState<Invoice>(initialInvoice);
   const [isEditing, setIsEditing] = useState(false);
@@ -77,6 +80,7 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailFeedback, setEmailFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [reminderSending, setReminderSending] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -202,6 +206,29 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       setEmailFeedback({ type: "error", message: err.message || "Failed to send email" });
     } finally {
       setEmailSending(false);
+    }
+  };
+
+  const handleSendReminder = async () => {
+    if (!clients.find((c) => c.id === invoice.clientId)?.email) {
+      setEmailFeedback({ type: "error", message: "This client doesn't have an email address on file. Add one from the Clients page." });
+      return;
+    }
+    setReminderSending(true);
+    setEmailFeedback(null);
+    try {
+      const res = await sendPaymentReminderAction(invoice.id);
+      if (res.success) {
+        setEmailFeedback({ type: "success", message: "Payment reminder emailed successfully." });
+        setInvoice((prev) => ({ ...prev, lastReminderSentAt: new Date().toISOString(), reminderCount: (prev.reminderCount || 0) + 1 }));
+        router.refresh();
+      } else {
+        setEmailFeedback({ type: "error", message: res.error || "Failed to send reminder" });
+      }
+    } catch (err: any) {
+      setEmailFeedback({ type: "error", message: err.message || "Failed to send reminder" });
+    } finally {
+      setReminderSending(false);
     }
   };
 
@@ -402,8 +429,26 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
               {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Email to Client
             </button>
+
+            {!isQuote && invoice.balanceDue > 0 && (
+              <button
+                onClick={handleSendReminder}
+                disabled={reminderSending}
+                className="inline-flex items-center justify-center gap-1.5 bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {reminderSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />}
+                Send Reminder
+              </button>
+            )}
           </div>
         </div>
+
+        {!isQuote && invoice.balanceDue > 0 && invoice.lastReminderSentAt && (
+          <p className="text-xs text-slate-400 font-medium -mt-2">
+            Last reminder sent {formatDate(invoice.lastReminderSentAt)}
+            {invoice.reminderCount ? ` • ${invoice.reminderCount} reminder${invoice.reminderCount > 1 ? "s" : ""} sent total` : ""}
+          </p>
+        )}
 
         {emailFeedback && (
           <div
@@ -475,250 +520,272 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       </div>
 
       {/* Invoice / Quote Document */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-10 max-w-4xl mx-auto print:border-0 print:shadow-none print:p-0 print:mx-0 print:w-full text-slate-800 relative font-sans text-xs">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-b-2 border-slate-800 pb-6">
-          <div className="flex items-start gap-4">
-            {profile.logoUrl && invoice.display.showLogo && (
-              <img src={profile.logoUrl} alt={profile.name} className="h-16 w-auto object-contain shrink-0 bg-slate-50 p-1.5 rounded-xl border border-slate-100 print:bg-transparent print:border-0" />
-            )}
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">{profile.name}</h2>
-              {profile.tagline && <p className="text-[10px] text-slate-500 font-bold italic tracking-wide mt-0.5">{profile.tagline}</p>}
-              <div className="text-slate-600 mt-2.5 space-y-0.5">
-                {profile.address && <p>{profile.address}</p>}
-                <p>{[profile.city, profile.state, profile.pincode].filter(Boolean).join(", ")}</p>
-                <p className="font-medium">
-                  {profile.phone && `Phone: ${profile.phone}`}
-                  {profile.phone && profile.email && " • "}
-                  {profile.email && `Email: ${profile.email}`}
-                </p>
-                {profile.taxId && <p className="font-mono font-bold text-slate-900 text-xs mt-1">Tax ID: {profile.taxId}</p>}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm max-w-4xl mx-auto print:border-0 print:shadow-none print:mx-0 print:w-full text-slate-800 relative font-sans text-xs overflow-hidden print:overflow-visible">
+        <div className="h-1.5 bg-indigo-600 print:hidden" />
+        <div className="p-6 sm:p-10 print:p-0">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 pb-6">
+            <div className="flex items-center gap-3.5">
+              {profile.logoUrl && invoice.display.showLogo && (
+                <div className="h-12 w-12 shrink-0 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-2 print:border-slate-200">
+                  <img src={profile.logoUrl} alt={profile.name} className="h-full w-full object-contain" />
+                </div>
+              )}
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">{profile.name}</h2>
+                {profile.tagline && <p className="text-[10px] text-slate-400 font-bold italic tracking-wide mt-0.5">{profile.tagline}</p>}
               </div>
             </div>
-          </div>
 
-          <div className="sm:text-right flex flex-col justify-between items-start sm:items-end">
-            <div className="bg-slate-900 text-white px-4 py-2 rounded-lg inline-block text-sm font-black uppercase tracking-wider">
-              {isQuote ? "QUOTE" : "INVOICE"}
-            </div>
-            <div className="mt-4 sm:mt-0 text-slate-650 space-y-1">
-              <div>
-                <span className="text-[10px] text-slate-450 font-bold uppercase block sm:inline">{isQuote ? "Quote No: " : "Invoice No: "}</span>
-                <span className="font-black text-slate-900 text-sm font-mono">{invoice.invoiceNo}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-450 font-bold uppercase block sm:inline">{isQuote ? "Quote Date: " : "Invoice Date: "}</span>
-                <span className="font-bold text-slate-800">{formatDate(invoice.invoiceDate)}</span>
+            <div className="sm:text-right flex flex-col sm:items-end gap-1.5">
+              <span className="inline-flex self-start sm:self-end bg-indigo-50 text-indigo-700 px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-widest">
+                {isQuote ? "Quote" : "Invoice"}
+              </span>
+              <div className="font-mono font-black text-slate-900 text-sm mt-1">{invoice.invoiceNo}</div>
+              <div className="text-[10px] text-slate-400 font-semibold">
+                Date: <span className="text-slate-700 font-bold">{formatDate(invoice.invoiceDate)}</span>
               </div>
               {invoice.dueDate && (
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase block sm:inline">{isQuote ? "Valid Until: " : "Due Date: "}</span>
-                  <span className="font-semibold text-slate-700">{formatDate(invoice.dueDate)}</span>
+                <div className="text-[10px] text-slate-400 font-semibold">
+                  {isQuote ? "Valid Until" : "Due"}: <span className="text-slate-700 font-bold">{formatDate(invoice.dueDate)}</span>
                 </div>
               )}
             </div>
           </div>
-        </div>
 
-        <div className="border-b border-slate-200 py-5">
-          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Bill To</div>
-          <h3 className="font-black text-slate-900 text-sm">{invoice.clientSnapshot.name}</h3>
-          {invoice.clientSnapshot.companyName && <p className="text-slate-600">{invoice.clientSnapshot.companyName}</p>}
-          {invoice.clientSnapshot.address && <p className="text-slate-600">{invoice.clientSnapshot.address}</p>}
-          {invoice.clientSnapshot.taxId && (
-            <p className="font-mono font-bold text-slate-900 mt-1">Tax ID: {invoice.clientSnapshot.taxId}</p>
-          )}
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-5 border-t border-slate-100">
+            <div>
+              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">From</div>
+              <h3 className="font-black text-slate-900 text-sm">{profile.name}</h3>
+              {profile.address && <p className="text-slate-500 mt-0.5">{profile.address}</p>}
+              <p className="text-slate-500">{[profile.city, profile.state, profile.pincode].filter(Boolean).join(", ")}</p>
+              <p className="text-slate-500">
+                {profile.phone}
+                {profile.phone && profile.email && " • "}
+                {profile.email}
+              </p>
+              {profile.taxId && <p className="font-mono font-bold text-slate-800 mt-1">Tax ID: {profile.taxId}</p>}
+            </div>
+            <div>
+              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">Bill To</div>
+              <h3 className="font-black text-slate-900 text-sm">{invoice.clientSnapshot.name}</h3>
+              {invoice.clientSnapshot.companyName && <p className="text-slate-500 mt-0.5">{invoice.clientSnapshot.companyName}</p>}
+              {invoice.clientSnapshot.address && <p className="text-slate-500">{invoice.clientSnapshot.address}</p>}
+              {invoice.clientSnapshot.email && <p className="text-slate-500">{invoice.clientSnapshot.email}</p>}
+              {invoice.clientSnapshot.taxId && (
+                <p className="font-mono font-bold text-slate-800 mt-1">Tax ID: {invoice.clientSnapshot.taxId}</p>
+              )}
+            </div>
+          </div>
 
-        <div className="py-6 overflow-x-auto w-full">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase border border-slate-200">
-              <tr className="print:bg-slate-100">
-                <th className="py-2 px-3 border border-slate-200 text-center w-8">Sl</th>
-                <th className="py-2 px-3 border border-slate-200">Description</th>
-                <th className="py-2 px-3 border border-slate-200 text-right w-16">Qty</th>
-                <th className="py-2 px-3 border border-slate-200 text-center w-16">Unit</th>
-                <th className="py-2 px-3 border border-slate-200 text-right">Rate</th>
-                <th className="py-2 px-3 border border-slate-200 text-right">Disc %</th>
-                <th className="py-2 px-3 border border-slate-200 text-right">Taxable</th>
-                <th className="py-2 px-3 border border-slate-200 text-right">Tax</th>
-                <th className="py-2 px-3 border border-slate-200 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.lineItems.map((item) => (
-                <tr key={item.slNo} className="hover:bg-slate-50/50 print:break-inside-avoid">
-                  <td className="py-2.5 px-3 border border-slate-200 text-center">{item.slNo}</td>
-                  <td className="py-2.5 px-3 border border-slate-200 font-bold text-slate-900">{item.description}</td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-right">{item.quantity}</td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-center text-slate-500 uppercase text-[9px] font-semibold">
-                    {item.unit}
-                  </td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-right">{formatCurrency(item.rate, currency)}</td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-right">
-                    {item.discountPercent > 0 ? `${item.discountPercent}%` : "-"}
-                  </td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-right">{formatCurrency(item.taxableValue, currency)}</td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-right">
-                    {item.taxAmount > 0 ? formatCurrency(item.taxAmount, currency) : "-"}
-                  </td>
-                  <td className="py-2.5 px-3 border border-slate-200 text-right font-bold text-slate-900">
-                    {formatCurrency(item.amount, currency)}
-                  </td>
+          <div className="py-2 overflow-x-auto w-full">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-indigo-50/70 print:bg-indigo-50">
+                  <th className="py-2.5 px-3 text-center w-8 text-[9px] font-black text-indigo-700 uppercase tracking-wide rounded-l-md">Sl</th>
+                  <th className="py-2.5 px-3 text-[9px] font-black text-indigo-700 uppercase tracking-wide">Description</th>
+                  <th className="py-2.5 px-3 text-right w-14 text-[9px] font-black text-indigo-700 uppercase tracking-wide">Qty</th>
+                  <th className="py-2.5 px-3 text-center w-14 text-[9px] font-black text-indigo-700 uppercase tracking-wide">Unit</th>
+                  <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide">Rate</th>
+                  <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide">Taxable</th>
+                  <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide">Tax</th>
+                  <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide rounded-r-md">Amount</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {invoice.lineItems.map((item) => (
+                  <tr key={item.slNo} className="border-b border-slate-100 print:break-inside-avoid">
+                    <td className="py-3 px-3 text-center text-slate-400">{item.slNo}</td>
+                    <td className="py-3 px-3 font-bold text-slate-900">
+                      {item.description}
+                      {item.discountPercent > 0 && (
+                        <span className="ml-1.5 text-[10px] font-semibold text-rose-500">(-{item.discountPercent}%)</span>
+                      )}
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-[10px] font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2 mt-0.5"
+                        >
+                          {item.url}
+                        </a>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 text-right text-slate-600">{item.quantity}</td>
+                    <td className="py-3 px-3 text-center text-slate-400 uppercase text-[9px] font-semibold">{item.unit}</td>
+                    <td className="py-3 px-3 text-right text-slate-600">{formatCurrency(item.rate, currency)}</td>
+                    <td className="py-3 px-3 text-right text-slate-600">{formatCurrency(item.taxableValue, currency)}</td>
+                    <td className="py-3 px-3 text-right text-slate-600">
+                      {item.taxAmount > 0 ? formatCurrency(item.taxAmount, currency) : "-"}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-slate-900">{formatCurrency(item.amount, currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start border-t border-slate-200 pt-6 print:break-inside-avoid">
-          <div className="sm:col-span-7 space-y-4">
-            {invoice.notes && invoice.display.showNotes && (
-              <div>
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Notes</div>
-                <div className="text-slate-700 mt-1 leading-snug whitespace-pre-line">{invoice.notes}</div>
-              </div>
-            )}
-
-            {!isQuote &&
-              invoice.display.showPaymentDetails &&
-              (invoice.paymentInstructions || profile.bank.accountNo || profile.upiId || profile.qrCodeUrl || qrCodeDataUrl) && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 print:bg-white print:break-inside-avoid">
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Wallet className="h-3.5 w-3.5 text-slate-400" /> Payment Details
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start pt-6 print:break-inside-avoid">
+            <div className="sm:col-span-7 space-y-4">
+              {invoice.notes && invoice.display.showNotes && (
+                <div>
+                  <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Notes</div>
+                  <div className="text-slate-600 mt-1 leading-snug whitespace-pre-line">{invoice.notes}</div>
                 </div>
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 space-y-2">
-                    {invoice.paymentInstructions && (
-                      <p className="text-slate-700 whitespace-pre-line">{invoice.paymentInstructions}</p>
+              )}
+
+              {!isQuote &&
+                invoice.display.showPaymentDetails &&
+                (invoice.paymentInstructions || profile.bank.accountNo || profile.upiId || profile.qrCodeUrl || qrCodeDataUrl) && (
+                <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl print:bg-white print:border-slate-200 print:break-inside-avoid">
+                  <div className="text-[9px] text-indigo-600 font-bold uppercase tracking-wider flex items-center gap-1 mb-2.5">
+                    <Wallet className="h-3.5 w-3.5" /> Payment Details
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 space-y-2">
+                      {invoice.paymentInstructions && (
+                        <p className="text-slate-600 whitespace-pre-line">{invoice.paymentInstructions}</p>
+                      )}
+                      {profile.bank.accountNo && (
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-700">
+                          {profile.bank.bankName && (
+                            <div>
+                              <span className="text-[9px] text-slate-400 font-medium block">Bank</span>
+                              <span className="font-bold text-slate-800 text-[11px]">{profile.bank.bankName}</span>
+                            </div>
+                          )}
+                          {profile.bank.accountName && (
+                            <div>
+                              <span className="text-[9px] text-slate-400 font-medium block">Account Holder</span>
+                              <span className="font-bold text-slate-800 text-[11px]">{profile.bank.accountName}</span>
+                            </div>
+                          )}
+                          {profile.bank.accountNo && (
+                            <div>
+                              <span className="text-[9px] text-slate-400 font-medium block">Account No.</span>
+                              <span className="font-bold text-slate-900 text-[11px] font-mono">{profile.bank.accountNo}</span>
+                            </div>
+                          )}
+                          {profile.bank.ifscOrSwift && (
+                            <div>
+                              <span className="text-[9px] text-slate-400 font-medium block">IFSC</span>
+                              <span className="font-bold text-slate-900 text-[11px] font-mono">{profile.bank.ifscOrSwift}</span>
+                            </div>
+                          )}
+                          {profile.bank.branch && (
+                            <div>
+                              <span className="text-[9px] text-slate-400 font-medium block">Branch</span>
+                              <span className="font-bold text-slate-800 text-[11px]">{profile.bank.branch}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {profile.upiId && (
+                        <div>
+                          <span className="text-[9px] text-slate-400 font-medium block">UPI ID</span>
+                          {upiUri ? (
+                            <a href={upiUri} className="font-bold text-indigo-600 hover:text-indigo-700 text-[11px] font-mono underline underline-offset-2">
+                              {profile.upiId}
+                            </a>
+                          ) : (
+                            <span className="font-bold text-slate-900 text-[11px] font-mono">{profile.upiId}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {(profile.qrCodeUrl || qrCodeDataUrl) && (
+                      <a
+                        href={upiUri || undefined}
+                        className={cn("shrink-0 flex flex-col items-center gap-1 print:break-inside-avoid", !upiUri && "pointer-events-none")}
+                      >
+                        <img
+                          src={profile.qrCodeUrl || qrCodeDataUrl || ""}
+                          alt="Scan to pay"
+                          className="h-24 w-24 object-contain bg-white border border-slate-200 rounded-lg p-1"
+                        />
+                        <span className="text-[8px] text-slate-400 font-bold uppercase flex items-center gap-0.5">
+                          <QrCode className="h-2.5 w-2.5" /> Tap or Scan to Pay
+                        </span>
+                      </a>
                     )}
-                    {profile.bank.accountNo && (
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-700 pt-1">
-                        {profile.bank.bankName && (
-                          <div>
-                            <span className="text-[9px] text-slate-400 font-medium block">Bank Name</span>
-                            <span className="font-bold text-slate-800 text-[11px]">{profile.bank.bankName}</span>
-                          </div>
-                        )}
-                        {profile.bank.accountNo && (
-                          <div>
-                            <span className="text-[9px] text-slate-400 font-medium block">Account Number</span>
-                            <span className="font-bold text-slate-900 text-[11px] font-mono">{profile.bank.accountNo}</span>
-                          </div>
-                        )}
-                        {profile.bank.ifscOrSwift && (
-                          <div>
-                            <span className="text-[9px] text-slate-400 font-medium block">IFSC / SWIFT</span>
-                            <span className="font-bold text-slate-900 text-[11px] font-mono">{profile.bank.ifscOrSwift}</span>
-                          </div>
-                        )}
-                        {profile.bank.branch && (
-                          <div>
-                            <span className="text-[9px] text-slate-400 font-medium block">Branch</span>
-                            <span className="font-bold text-slate-800 text-[11px]">{profile.bank.branch}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {profile.upiId && (
-                      <div>
-                        <span className="text-[9px] text-slate-400 font-medium block">UPI ID</span>
-                        <span className="font-bold text-slate-900 text-[11px] font-mono">{profile.upiId}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sm:col-span-5 text-sm print:break-inside-avoid">
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between text-slate-500">
+                  <span>Subtotal</span>
+                  <span className="font-semibold text-slate-700">{formatCurrency(invoice.subtotal, currency)}</span>
+                </div>
+                {invoice.totalDiscount > 0 && (
+                  <div className="flex justify-between text-slate-500">
+                    <span>Discount</span>
+                    <span className="font-semibold text-rose-500">-{formatCurrency(invoice.totalDiscount, currency)}</span>
+                  </div>
+                )}
+                {invoice.display.showTaxBreakdown && (
+                  <div className="space-y-2 border-t border-slate-100 pt-2">
+                    <div className="flex justify-between text-slate-800 font-bold">
+                      <span>Taxable Value</span>
+                      <span>{formatCurrency(invoice.taxableValueTotal, currency)}</span>
+                    </div>
+                    {invoice.taxTotal > 0 && (
+                      <div className="flex justify-between text-[11px] text-slate-500">
+                        <span>Tax</span>
+                        <span>{formatCurrency(invoice.taxTotal, currency)}</span>
                       </div>
                     )}
                   </div>
-                  {(profile.qrCodeUrl || qrCodeDataUrl) && (
-                    <div className="shrink-0 flex flex-col items-center gap-1 print:break-inside-avoid">
-                      <img
-                        src={profile.qrCodeUrl || qrCodeDataUrl || ""}
-                        alt="Scan to pay"
-                        className="h-24 w-24 object-contain bg-white border border-slate-200 rounded-lg p-1"
-                      />
-                      <span className="text-[8px] text-slate-400 font-bold uppercase flex items-center gap-0.5">
-                        <QrCode className="h-2.5 w-2.5" /> Scan to Pay
+                )}
+                <div className="flex justify-between items-center border-t-2 border-indigo-600 pt-3 mt-1">
+                  <span className="font-black text-slate-900 text-sm">Grand Total</span>
+                  <span className="text-2xl font-black text-indigo-700">{formatCurrency(invoice.grandTotal, currency)}</span>
+                </div>
+
+                {!isQuote && invoice.amountPaid > 0 && (
+                  <>
+                    <div className="flex justify-between text-[11px] text-emerald-600 font-semibold">
+                      <span>Amount Paid</span>
+                      <span>-{formatCurrency(invoice.amountPaid, currency)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="font-black text-slate-900">Balance Due</span>
+                      <span className={cn("text-lg font-black", invoice.balanceDue > 0 ? "text-rose-600" : "text-emerald-600")}>
+                        {formatCurrency(Math.max(invoice.balanceDue, 0), currency)}
                       </span>
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
-            )}
-          </div>
-
-          <div className="sm:col-span-5 border border-slate-200 rounded-xl overflow-hidden text-sm print:break-inside-avoid">
-            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider print:bg-slate-100">
-              Totals
-            </div>
-            <div className="p-4 space-y-2.5 text-xs">
-              <div className="flex justify-between text-slate-500">
-                <span>Subtotal:</span>
-                <span className="font-semibold text-slate-700">{formatCurrency(invoice.subtotal, currency)}</span>
-              </div>
-              {invoice.totalDiscount > 0 && (
-                <div className="flex justify-between text-slate-500">
-                  <span>Total Discount:</span>
-                  <span className="font-semibold text-rose-500">-{formatCurrency(invoice.totalDiscount, currency)}</span>
-                </div>
-              )}
-              {invoice.display.showTaxBreakdown && (
-                <>
-                  <div className="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-2">
-                    <span>Taxable Value:</span>
-                    <span>{formatCurrency(invoice.taxableValueTotal, currency)}</span>
-                  </div>
-                  {invoice.taxTotal > 0 && (
-                    <div className="flex justify-between text-[11px] text-slate-500">
-                      <span>Tax Total:</span>
-                      <span>{formatCurrency(invoice.taxTotal, currency)}</span>
-                    </div>
-                  )}
-                </>
-              )}
-              <div className="flex justify-between items-baseline border-t border-slate-800 pt-3 mt-1.5">
-                <span className="font-black text-slate-900">Grand Total:</span>
-                <span className="text-xl font-black text-indigo-700">{formatCurrency(invoice.grandTotal, currency)}</span>
-              </div>
-
-              {!isQuote && invoice.amountPaid > 0 && (
-                <>
-                  <div className="flex justify-between text-[11px] text-emerald-600 font-semibold border-t border-slate-100 pt-2">
-                    <span>Amount Paid:</span>
-                    <span>-{formatCurrency(invoice.amountPaid, currency)}</span>
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-black text-slate-900">Balance Due:</span>
-                    <span className={cn("text-lg font-black", invoice.balanceDue > 0 ? "text-rose-600" : "text-emerald-600")}>
-                      {formatCurrency(Math.max(invoice.balanceDue, 0), currency)}
-                    </span>
-                  </div>
-                </>
-              )}
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-end border-t border-slate-300 pt-8 mt-8 text-[10px] text-slate-600 print:break-inside-avoid">
-          <div>
-            {isQuote && (
-              <p className="text-slate-400 leading-relaxed">
-                This quote is valid until the date above. Prices and availability are subject to confirmation after this period.
-              </p>
-            )}
-          </div>
-          <div className="sm:text-right space-y-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-end border-t border-slate-100 pt-6 mt-6 text-[10px] text-slate-500 print:break-inside-avoid">
             <div>
-              <span className="text-slate-400 font-semibold block">for</span>
-              <span className="font-bold text-slate-900 block">{profile.name}</span>
+              {isQuote && (
+                <p className="text-slate-400 leading-relaxed">
+                  This quote is valid until the date above. Prices and availability are subject to confirmation after this period.
+                </p>
+              )}
+            </div>
+            <div className="sm:text-right space-y-10">
+              <div>
+                <span className="text-slate-400 font-semibold block">For</span>
+                <span className="font-bold text-slate-900 block">{profile.name}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="text-center text-[9px] text-slate-300 font-medium uppercase tracking-wider mt-12 pt-6 border-t border-slate-100 relative">
-          This is a computer generated {isQuote ? "quote" : "invoice"}.
-          {printDateTime && (
-            <div className="hidden print:block absolute right-0 bottom-0 text-[8px] text-slate-400 font-mono font-bold lowercase tracking-normal">
-              printed on: {printDateTime}
-            </div>
-          )}
+          <div className="text-center text-[9px] text-slate-300 font-medium uppercase tracking-wider mt-8 pt-4 border-t border-slate-50 relative">
+            This is a computer generated {isQuote ? "quote" : "invoice"}.
+            {printDateTime && (
+              <div className="hidden print:block absolute right-0 bottom-0 text-[8px] text-slate-400 font-mono font-bold lowercase tracking-normal">
+                printed on: {printDateTime}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

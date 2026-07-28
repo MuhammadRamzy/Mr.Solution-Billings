@@ -35,7 +35,7 @@ import {
 } from "@/lib/types";
 import { calculateLineItem, calculateInvoiceTotals, derivePaymentStatus } from "@/lib/calculations";
 import { generateInvoicePdfBuffer, invoicePdfFilename } from "@/lib/pdf";
-import { sendInvoiceEmail } from "@/lib/mail";
+import { sendInvoiceEmail, sendPaymentReminderEmail } from "@/lib/mail";
 
 // Next.js redacts thrown Server Action error messages in production builds
 // (by design, to avoid leaking internals) - so every action here catches its
@@ -154,6 +154,7 @@ interface InvoiceInput {
   clientId: string;
   lineItems: Array<{
     description: string;
+    url?: string | null;
     quantity: number;
     unit: string;
     rate: number;
@@ -206,6 +207,8 @@ export async function createInvoiceAction(data: InvoiceInput) {
       display: data.display,
       notes: data.notes || null,
       paymentInstructions: data.paymentInstructions || null,
+      lastReminderSentAt: null,
+      reminderCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -333,6 +336,8 @@ export async function convertQuoteToInvoiceAction(id: string) {
       status: "sent",
       convertedFromQuoteId: quote.id,
       convertedToInvoiceId: null,
+      lastReminderSentAt: null,
+      reminderCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -490,6 +495,37 @@ export async function sendInvoiceEmailAction(invoiceId: string) {
   } catch (error) {
     console.error("sendInvoiceEmailAction failed:", error);
     return { success: false as const, error: errorMessage(error, "Failed to send email") };
+  }
+}
+
+export async function sendPaymentReminderAction(invoiceId: string) {
+  try {
+    const [invoices, clients, profile] = await Promise.all([getInvoices(), getClients(), getBusinessProfile()]);
+    const invoice = invoices.find((inv) => inv.id === invoiceId);
+    if (!invoice) {
+      return { success: false as const, error: "Invoice not found" };
+    }
+
+    const client = clients.find((c) => c.id === invoice.clientId);
+    if (!client) {
+      return { success: false as const, error: "Client not found" };
+    }
+
+    const result = await sendPaymentReminderEmail({ invoice, profile, client });
+
+    if (result.success) {
+      invoice.lastReminderSentAt = new Date().toISOString();
+      invoice.reminderCount = (invoice.reminderCount || 0) + 1;
+      invoice.updatedAt = new Date().toISOString();
+      await saveInvoice(invoice);
+      revalidatePath("/invoices");
+      revalidatePath(`/invoices/${invoiceId}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("sendPaymentReminderAction failed:", error);
+    return { success: false as const, error: errorMessage(error, "Failed to send reminder") };
   }
 }
 

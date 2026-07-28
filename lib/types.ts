@@ -56,6 +56,7 @@ export const ClientSchema = z.object({
 export const LineItemSchema = z.object({
   slNo: z.number().int().positive(),
   description: z.string().min(1, "Description is required"),
+  url: z.string().optional().nullable().or(z.literal("")),
   quantity: z.number().positive("Quantity must be greater than 0"),
   unit: z.string().min(1, "Unit is required"),
   rate: z.number().nonnegative("Rate must be positive"),
@@ -117,6 +118,8 @@ export const InvoiceSchema = z.object({
   display: DisplayOptionsSchema.default({ showLogo: true, showPaymentDetails: true, showTaxBreakdown: true, showNotes: true }),
   notes: z.string().optional().nullable(),
   paymentInstructions: z.string().optional().nullable(),
+  lastReminderSentAt: z.string().optional().nullable(),
+  reminderCount: z.number().int().nonnegative().default(0),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

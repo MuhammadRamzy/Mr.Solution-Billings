@@ -9,6 +9,7 @@ export function roundToTwoDecimals(num: number): number {
 
 interface CalculateLineItemInput {
   description: string;
+  url?: string | null;
   quantity: number;
   unit: string;
   rate: number;
@@ -33,6 +34,7 @@ export function calculateLineItem(item: CalculateLineItemInput, slNo: number): L
   return {
     slNo,
     description: item.description,
+    url: item.url || null,
     quantity,
     unit: item.unit,
     rate,
