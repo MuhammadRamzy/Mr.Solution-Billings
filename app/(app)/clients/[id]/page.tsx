@@ -10,15 +10,13 @@ interface PageProps {
 }
 
 export default async function ClientDetailPage({ params }: PageProps) {
-  const { id } = await params;
-  const clients = await getClients();
+  const [{ id }, clients, invoices] = await Promise.all([params, getClients(), getInvoices()]);
   const client = clients.find((c) => c.id === id);
 
   if (!client) {
     notFound();
   }
 
-  const invoices = await getInvoices();
   const clientInvoices = invoices.filter((inv) => inv.clientId === id);
 
   return <ClientDetailView client={client} invoices={clientInvoices} />;

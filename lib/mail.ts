@@ -41,6 +41,7 @@ function buildInvoiceEmailHtml(invoice: Invoice, profile: BusinessProfile, hasQr
 
   const paymentBlock =
     !isQuote &&
+    invoice.display.showPaymentDetails &&
     (invoice.paymentInstructions || profile.bank?.accountNo || profile.upiId || hasQrCid)
       ? `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
@@ -115,7 +116,7 @@ function buildInvoiceEmailHtml(invoice: Invoice, profile: BusinessProfile, hasQr
               <td style="padding:6px 12px;font-size:12px;color:#334155;text-align:right;">${fmt(invoice.subtotal)}</td>
             </tr>
             ${invoice.totalDiscount > 0 ? `<tr><td style="padding:6px 12px;font-size:12px;color:#64748b;">Discount</td><td style="padding:6px 12px;font-size:12px;color:#dc2626;text-align:right;">-${fmt(invoice.totalDiscount)}</td></tr>` : ""}
-            ${invoice.taxTotal > 0 ? `<tr><td style="padding:6px 12px;font-size:12px;color:#64748b;">Tax</td><td style="padding:6px 12px;font-size:12px;color:#334155;text-align:right;">${fmt(invoice.taxTotal)}</td></tr>` : ""}
+            ${invoice.display.showTaxBreakdown && invoice.taxTotal > 0 ? `<tr><td style="padding:6px 12px;font-size:12px;color:#64748b;">Tax</td><td style="padding:6px 12px;font-size:12px;color:#334155;text-align:right;">${fmt(invoice.taxTotal)}</td></tr>` : ""}
             <tr>
               <td style="padding:8px 12px;font-size:15px;color:#0f172a;font-weight:800;border-top:2px solid #0f172a;">Grand Total</td>
               <td style="padding:8px 12px;font-size:18px;color:${accent};font-weight:800;text-align:right;border-top:2px solid #0f172a;">${fmt(invoice.grandTotal)}</td>
@@ -125,7 +126,7 @@ function buildInvoiceEmailHtml(invoice: Invoice, profile: BusinessProfile, hasQr
 
           ${paymentBlock}
 
-          ${invoice.notes ? `<p style="margin:20px 0 0;font-size:12px;color:#64748b;white-space:pre-line;line-height:1.6;">${invoice.notes}</p>` : ""}
+          ${invoice.notes && invoice.display.showNotes ? `<p style="margin:20px 0 0;font-size:12px;color:#64748b;white-space:pre-line;line-height:1.6;">${invoice.notes}</p>` : ""}
         </td>
       </tr>
       <tr>

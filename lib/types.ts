@@ -75,6 +75,14 @@ export const PaymentSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
+// Per-invoice control over which sections appear on the printed/PDF/emailed document.
+export const DisplayOptionsSchema = z.object({
+  showLogo: z.boolean().default(true),
+  showPaymentDetails: z.boolean().default(true),
+  showTaxBreakdown: z.boolean().default(true),
+  showNotes: z.boolean().default(true),
+});
+
 // A single document schema powers both Quotes and Invoices - `type` distinguishes them,
 // and only invoices carry a meaningful payments/amountPaid/balanceDue trail.
 export const InvoiceSchema = z.object({
@@ -106,6 +114,7 @@ export const InvoiceSchema = z.object({
   status: z.enum(["draft", "sent", "accepted", "declined", "partial", "paid", "overdue"]),
   convertedToInvoiceId: z.string().uuid().optional().nullable(),
   convertedFromQuoteId: z.string().uuid().optional().nullable(),
+  display: DisplayOptionsSchema.default({ showLogo: true, showPaymentDetails: true, showTaxBreakdown: true, showNotes: true }),
   notes: z.string().optional().nullable(),
   paymentInstructions: z.string().optional().nullable(),
   createdAt: z.string().datetime(),
@@ -149,6 +158,7 @@ export type BusinessProfile = z.infer<typeof BusinessProfileSchema>;
 export type Client = z.infer<typeof ClientSchema>;
 export type LineItem = z.infer<typeof LineItemSchema>;
 export type Payment = z.infer<typeof PaymentSchema>;
+export type DisplayOptions = z.infer<typeof DisplayOptionsSchema>;
 export type Invoice = z.infer<typeof InvoiceSchema>;
 export type Counters = z.infer<typeof CountersSchema>;
 export type Expense = z.infer<typeof ExpenseSchema>;

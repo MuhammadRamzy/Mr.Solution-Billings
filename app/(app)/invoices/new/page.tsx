@@ -9,9 +9,7 @@ interface PageProps {
 }
 
 export default async function NewInvoicePage({ searchParams }: PageProps) {
-  const { clientId, type } = await searchParams;
-  const profile = await getBusinessProfile();
-  const clients = await getClients();
+  const [{ clientId, type }, profile, clients] = await Promise.all([searchParams, getBusinessProfile(), getClients()]);
   const preselectedType = type === "quote" ? "quote" : undefined;
 
   return <InvoiceForm profile={profile} initialClients={clients} preselectedClientId={clientId} preselectedType={preselectedType} />;

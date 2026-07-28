@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Building, CreditCard, MapPin, Save, CheckCircle, Loader2, FileText, Key, QrCode } from "lucide-react";
+import { Building, CreditCard, MapPin, Save, CheckCircle, Loader2, FileText, Key, QrCode, ChevronDown } from "lucide-react";
+import QRCodeLib from "qrcode";
 import { BusinessProfile, BusinessProfileSchema } from "@/lib/types";
 import { updateBusinessProfileAction, changePasswordAction } from "@/app/actions";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,32 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdSuccess, setPwdSuccess] = useState(false);
   const [pwdError, setPwdError] = useState<string | null>(null);
+
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
+  const [showAdvancedQr, setShowAdvancedQr] = useState(!!initialProfile.qrCodeUrl);
+
+  useEffect(() => {
+    if (!formData.upiId) {
+      setQrPreview(null);
+      return;
+    }
+    let cancelled = false;
+    const uri = `upi://pay?${new URLSearchParams({
+      pa: formData.upiId,
+      pn: formData.name || "Payee",
+      cu: "INR",
+    }).toString()}`;
+    QRCodeLib.toDataURL(uri, { margin: 1, width: 160 })
+      .then((url) => {
+        if (!cancelled) setQrPreview(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrPreview(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.upiId, formData.name]);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,8 +307,8 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="flex gap-4 items-start">
+                <div className="flex-1">
                   <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">UPI ID</label>
                   <input
                     type="text"
@@ -290,21 +317,44 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
                     placeholder="e.g. you@okhdfcbank"
                     className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-mono"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">Auto-generates a scannable payment QR on invoices.</p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    That's it — a scannable payment QR is generated automatically on every invoice. No image upload needed.
+                  </p>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <QrCode className="h-3 w-3" /> Custom QR Image URL
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.qrCodeUrl || ""}
-                    onChange={(e) => handleChange("qrCodeUrl", e.target.value)}
-                    placeholder="/my-qr.png or https://..."
-                    className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-mono text-xs"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">Overrides the auto-generated UPI QR (e.g. PayPal.me QR, wallet QR).</p>
-                </div>
+                {qrPreview && !formData.qrCodeUrl && (
+                  <div className="shrink-0 flex flex-col items-center gap-1 pt-6">
+                    <img src={qrPreview} alt="QR preview" className="h-16 w-16 rounded-lg border border-slate-200" />
+                    <span className="text-[9px] text-slate-400 font-bold uppercase">Live Preview</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedQr((v) => !v)}
+                  className="flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", showAdvancedQr && "rotate-180")} />
+                  Advanced: use a custom QR image instead (PayPal.me, wallet, etc.)
+                </button>
+                {showAdvancedQr && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <QrCode className="h-3 w-3" /> Custom QR Image URL (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.qrCodeUrl || ""}
+                      onChange={(e) => handleChange("qrCodeUrl", e.target.value)}
+                      placeholder="/my-qr.png or https://..."
+                      className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-mono text-xs"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Only needed if you want to override the auto-generated UPI QR. Leave blank otherwise.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>

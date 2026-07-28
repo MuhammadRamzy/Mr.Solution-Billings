@@ -311,7 +311,7 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl }: InvoiceDocum
       <Page size="A4" style={styles.page}>
         <View style={styles.headerContainer}>
           <View style={styles.companyHeaderRow}>
-            {logoPath ? <Image src={logoPath} style={styles.companyLogo} /> : null}
+            {logoPath && invoice.display.showLogo ? <Image src={logoPath} style={styles.companyLogo} /> : null}
             <View style={styles.companyDetails}>
               <Text style={styles.companyName}>{profile.name}</Text>
               {profile.tagline ? <Text style={styles.companyTagline}>{profile.tagline}</Text> : null}
@@ -427,14 +427,16 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl }: InvoiceDocum
 
         <View style={styles.summaryContainer} wrap={false}>
           <View style={styles.summaryLeft}>
-            {invoice.notes ? (
+            {invoice.notes && invoice.display.showNotes ? (
               <>
                 <Text style={styles.notesLabel}>Notes</Text>
                 <Text style={styles.notesText}>{invoice.notes}</Text>
               </>
             ) : null}
 
-            {!isQuote && (invoice.paymentInstructions || profile.bank?.accountNo || profile.upiId || qrImageSrc) ? (
+            {!isQuote &&
+            invoice.display.showPaymentDetails &&
+            (invoice.paymentInstructions || profile.bank?.accountNo || profile.upiId || qrImageSrc) ? (
               <View style={styles.paymentDetailsRow}>
                 <View style={[styles.bankContainer, { flex: 1 }]}>
                   <Text style={styles.bankTitle}>Payment Details</Text>
@@ -487,15 +489,19 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl }: InvoiceDocum
                 <Text style={[styles.summaryVal, { color: "#b91c1c" }]}>-{fmt(invoice.totalDiscount)}</Text>
               </View>
             )}
-            <View style={[styles.summaryRow, { borderTopWidth: 1, borderTopColor: "#f1f5f9", paddingTop: 2 }]}>
-              <Text style={[styles.summaryLabel, { fontFamily: "Helvetica-Bold", color: "#334155" }]}>Taxable Value:</Text>
-              <Text style={styles.summaryVal}>{fmt(invoice.taxableValueTotal)}</Text>
-            </View>
-            {invoice.taxTotal > 0 && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Tax Total:</Text>
-                <Text style={styles.summaryVal}>{fmt(invoice.taxTotal)}</Text>
-              </View>
+            {invoice.display.showTaxBreakdown && (
+              <>
+                <View style={[styles.summaryRow, { borderTopWidth: 1, borderTopColor: "#f1f5f9", paddingTop: 2 }]}>
+                  <Text style={[styles.summaryLabel, { fontFamily: "Helvetica-Bold", color: "#334155" }]}>Taxable Value:</Text>
+                  <Text style={styles.summaryVal}>{fmt(invoice.taxableValueTotal)}</Text>
+                </View>
+                {invoice.taxTotal > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Tax Total:</Text>
+                    <Text style={styles.summaryVal}>{fmt(invoice.taxTotal)}</Text>
+                  </View>
+                )}
+              </>
             )}
             <View style={styles.summaryTotalRow}>
               <Text style={styles.summaryTotalLabel}>Grand Total:</Text>

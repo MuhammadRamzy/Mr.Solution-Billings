@@ -8,10 +8,12 @@ import DashboardTabs from "@/components/DashboardTabs";
 export const revalidate = 0;
 
 export default async function DashboardPage() {
-  const allDocs = await getInvoices();
-  const clients = await getClients();
-  const expenses = await getExpenses();
-  const profile = await getBusinessProfile();
+  const [allDocs, clients, expenses, profile] = await Promise.all([
+    getInvoices(),
+    getClients(),
+    getExpenses(),
+    getBusinessProfile(),
+  ]);
   const currency = profile.currency;
 
   // Quotes never count toward revenue/tax/outstanding - only real invoices do.

@@ -5,9 +5,7 @@ import InvoicesList from "@/components/InvoicesList";
 export const revalidate = 0;
 
 export default async function InvoicesPage() {
-  const invoices = await getInvoices();
-  const clients = await getClients();
-  const profile = await getBusinessProfile();
+  const [invoices, clients, profile] = await Promise.all([getInvoices(), getClients(), getBusinessProfile()]);
 
   return <InvoicesList initialInvoices={invoices} clients={clients} profile={profile} />;
 }

@@ -451,6 +451,17 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                 ))}
               </div>
             )}
+
+            {!profile.upiId && !profile.qrCodeUrl && !qrCodeDataUrl && (
+              <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-[11px] text-indigo-700 font-semibold flex items-center gap-2">
+                <QrCode className="h-4 w-4 shrink-0" />
+                No payment QR yet — add a UPI ID in{" "}
+                <Link href="/settings" className="underline font-bold">
+                  Settings
+                </Link>{" "}
+                and it'll appear automatically on this invoice.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -459,7 +470,7 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-10 max-w-4xl mx-auto print:border-0 print:shadow-none print:p-0 print:mx-0 print:w-full text-slate-800 relative font-sans text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-b-2 border-slate-800 pb-6">
           <div className="flex items-start gap-4">
-            {profile.logoUrl && (
+            {profile.logoUrl && invoice.display.showLogo && (
               <img src={profile.logoUrl} alt={profile.name} className="h-16 w-auto object-contain shrink-0 bg-slate-50 p-1.5 rounded-xl border border-slate-100 print:bg-transparent print:border-0" />
             )}
             <div>
@@ -554,14 +565,16 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
 
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start border-t border-slate-200 pt-6 print:break-inside-avoid">
           <div className="sm:col-span-7 space-y-4">
-            {invoice.notes && (
+            {invoice.notes && invoice.display.showNotes && (
               <div>
                 <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Notes</div>
                 <div className="text-slate-700 mt-1 leading-snug whitespace-pre-line">{invoice.notes}</div>
               </div>
             )}
 
-            {!isQuote && (invoice.paymentInstructions || profile.bank.accountNo || profile.upiId || profile.qrCodeUrl || qrCodeDataUrl) && (
+            {!isQuote &&
+              invoice.display.showPaymentDetails &&
+              (invoice.paymentInstructions || profile.bank.accountNo || profile.upiId || profile.qrCodeUrl || qrCodeDataUrl) && (
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 print:bg-white print:break-inside-avoid">
                 <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                   <Wallet className="h-3.5 w-3.5 text-slate-400" /> Payment Details
@@ -638,15 +651,19 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                   <span className="font-semibold text-rose-500">-{formatCurrency(invoice.totalDiscount, currency)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-2">
-                <span>Taxable Value:</span>
-                <span>{formatCurrency(invoice.taxableValueTotal, currency)}</span>
-              </div>
-              {invoice.taxTotal > 0 && (
-                <div className="flex justify-between text-[11px] text-slate-500">
-                  <span>Tax Total:</span>
-                  <span>{formatCurrency(invoice.taxTotal, currency)}</span>
-                </div>
+              {invoice.display.showTaxBreakdown && (
+                <>
+                  <div className="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-2">
+                    <span>Taxable Value:</span>
+                    <span>{formatCurrency(invoice.taxableValueTotal, currency)}</span>
+                  </div>
+                  {invoice.taxTotal > 0 && (
+                    <div className="flex justify-between text-[11px] text-slate-500">
+                      <span>Tax Total:</span>
+                      <span>{formatCurrency(invoice.taxTotal, currency)}</span>
+                    </div>
+                  )}
+                </>
               )}
               <div className="flex justify-between items-baseline border-t border-slate-800 pt-3 mt-1.5">
                 <span className="font-black text-slate-900">Grand Total:</span>

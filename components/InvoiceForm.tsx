@@ -62,6 +62,11 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
     invoice?.paymentInstructions || profile.paymentInstructions || ""
   );
 
+  const [showLogo, setShowLogo] = useState(invoice?.display?.showLogo !== false);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(invoice?.display?.showPaymentDetails !== false);
+  const [showTaxBreakdown, setShowTaxBreakdown] = useState(invoice?.display?.showTaxBreakdown !== false);
+  const [showNotes, setShowNotes] = useState(invoice?.display?.showNotes !== false);
+
   const [lineItems, setLineItems] = useState<FormLineItem[]>(() => {
     if (invoice && invoice.lineItems) {
       return invoice.lineItems.map((item) => ({
@@ -192,6 +197,7 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
       notes: notes || null,
       paymentInstructions: paymentInstructions || null,
       status,
+      display: { showLogo, showPaymentDetails, showTaxBreakdown, showNotes },
     };
 
     try {
@@ -543,6 +549,54 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                 onChange={(e) => setPaymentInstructions(e.target.value)}
                 className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 focus:border-indigo-500 focus:outline-none bg-white"
               />
+            </div>
+          </div>
+
+          {/* Print / Section Visibility Options */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm space-y-3">
+            <h2 className="text-base font-bold text-slate-800 border-b border-slate-50 pb-3">
+              What Shows On This {docType === "quote" ? "Quote" : "Invoice"}
+            </h2>
+            <p className="text-xs text-slate-400 -mt-1">
+              Control which sections appear on the printed/PDF/emailed document. Toggle off anything you don't need.
+            </p>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <label className="flex items-center gap-2 cursor-pointer py-1 select-none">
+                <input
+                  type="checkbox"
+                  checked={showLogo}
+                  onChange={(e) => setShowLogo(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-slate-350 cursor-pointer"
+                />
+                <span className="text-sm font-semibold text-slate-700">Logo</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer py-1 select-none">
+                <input
+                  type="checkbox"
+                  checked={showPaymentDetails}
+                  onChange={(e) => setShowPaymentDetails(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-slate-350 cursor-pointer"
+                />
+                <span className="text-sm font-semibold text-slate-700">Payment Details / QR</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer py-1 select-none">
+                <input
+                  type="checkbox"
+                  checked={showTaxBreakdown}
+                  onChange={(e) => setShowTaxBreakdown(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-slate-350 cursor-pointer"
+                />
+                <span className="text-sm font-semibold text-slate-700">Tax Breakdown</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer py-1 select-none">
+                <input
+                  type="checkbox"
+                  checked={showNotes}
+                  onChange={(e) => setShowNotes(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-slate-350 cursor-pointer"
+                />
+                <span className="text-sm font-semibold text-slate-700">Notes / Terms</span>
+              </label>
             </div>
           </div>
         </div>

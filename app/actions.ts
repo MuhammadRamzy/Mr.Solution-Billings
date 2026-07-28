@@ -106,8 +106,7 @@ function buildClientSnapshot(client: Client) {
 }
 
 async function nextDocNumber(type: "quote" | "invoice", year: string) {
-  const profile = await getBusinessProfile();
-  const counters = await getCounters();
+  const [profile, counters] = await Promise.all([getBusinessProfile(), getCounters()]);
   const bucket = type === "quote" ? counters.quoteCounters : counters.invoiceCounters;
   const nextSequence = (bucket[year] || 0) + 1;
   bucket[year] = nextSequence;
@@ -134,11 +133,11 @@ interface InvoiceInput {
   notes?: string | null;
   paymentInstructions?: string | null;
   status: "draft" | "sent" | "accepted" | "declined";
+  display: { showLogo: boolean; showPaymentDetails: boolean; showTaxBreakdown: boolean; showNotes: boolean };
 }
 
 export async function createInvoiceAction(data: InvoiceInput) {
-  const profile = await getBusinessProfile();
-  const clients = await getClients();
+  const [profile, clients] = await Promise.all([getBusinessProfile(), getClients()]);
   const client = clients.find((c) => c.id === data.clientId);
   if (!client) {
     throw new Error("Client not found");
@@ -173,6 +172,7 @@ export async function createInvoiceAction(data: InvoiceInput) {
     status: data.status,
     convertedToInvoiceId: null,
     convertedFromQuoteId: null,
+    display: data.display,
     notes: data.notes || null,
     paymentInstructions: data.paymentInstructions || null,
     createdAt: new Date().toISOString(),
@@ -189,13 +189,12 @@ export async function createInvoiceAction(data: InvoiceInput) {
 }
 
 export async function updateInvoiceAction(id: string, data: InvoiceInput) {
-  const invoices = await getInvoices();
+  const [invoices, clients] = await Promise.all([getInvoices(), getClients()]);
   const existingInvoice = invoices.find((inv) => inv.id === id);
   if (!existingInvoice) {
     throw new Error("Invoice not found");
   }
 
-  const clients = await getClients();
   const client = clients.find((c) => c.id === data.clientId);
   if (!client) {
     throw new Error("Client not found");
@@ -224,6 +223,7 @@ export async function updateInvoiceAction(id: string, data: InvoiceInput) {
     amountPaid,
     balanceDue,
     status: nextStatus,
+    display: data.display,
     notes: data.notes || null,
     paymentInstructions: data.paymentInstructions || null,
     updatedAt: new Date().toISOString(),
@@ -391,19 +391,17 @@ export async function deletePaymentAction(invoiceId: string, paymentId: string) 
 
 // --- Email Actions ---
 export async function sendInvoiceEmailAction(invoiceId: string) {
-  const invoices = await getInvoices();
+  const [invoices, clients, profile] = await Promise.all([getInvoices(), getClients(), getBusinessProfile()]);
   const invoice = invoices.find((inv) => inv.id === invoiceId);
   if (!invoice) {
     throw new Error("Invoice not found");
   }
 
-  const clients = await getClients();
   const client = clients.find((c) => c.id === invoice.clientId);
   if (!client) {
     throw new Error("Client not found");
   }
 
-  const profile = await getBusinessProfile();
   const pdfBuffer = await generateInvoicePdfBuffer(invoice, profile);
   const result = await sendInvoiceEmail({
     invoice,
@@ -465,8 +463,7 @@ export async function deleteExpenseAction(id: string) {
 // --- Auth Actions ---
 export async function loginAction(password: string) {
   try {
-    const savedHash = await getPasswordHash();
-    const enteredHash = await hashPassword(password);
+    const [savedHash, enteredHash] = await Promise.all([getPasswordHash(), hashPassword(password)]);
 
     if (savedHash === enteredHash) {
       const payload = {
@@ -506,8 +503,7 @@ export async function logoutAction() {
 
 export async function changePasswordAction(oldPassword: string, newPassword: string) {
   try {
-    const savedHash = await getPasswordHash();
-    const oldHash = await hashPassword(oldPassword);
+    const [savedHash, oldHash] = await Promise.all([getPasswordHash(), hashPassword(oldPassword)]);
 
     if (savedHash !== oldHash) {
       return { success: false, error: "Incorrect current password" };

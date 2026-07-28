@@ -11,16 +11,13 @@ interface PageProps {
 }
 
 export default async function InvoiceDetailPage({ params }: PageProps) {
-  const { id } = await params;
-  const invoices = await getInvoices();
+  const [{ id }, invoices, profile, clients] = await Promise.all([params, getInvoices(), getBusinessProfile(), getClients()]);
   const invoice = invoices.find((inv) => inv.id === id);
 
   if (!invoice) {
     notFound();
   }
 
-  const profile = await getBusinessProfile();
-  const clients = await getClients();
   const qrCodeDataUrl = await getInvoiceQrDataUrl(profile, invoice);
 
   return <InvoiceDetailView invoice={invoice} profile={profile} clients={clients} qrCodeDataUrl={qrCodeDataUrl} />;
