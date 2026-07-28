@@ -5,6 +5,10 @@ import { getInvoiceQrDataUrl } from "@/lib/qr";
 import InvoiceDetailView from "@/components/InvoiceDetailView";
 
 export const revalidate = 0;
+// Extends the timeout for this page's Server Actions - sendInvoiceEmailAction
+// does PDF rendering plus an SMTP round-trip to Gmail, which can run past
+// Vercel's default 10s limit on a cold start.
+export const maxDuration = 30;
 
 interface PageProps {
   params: Promise<{ id: string }>;

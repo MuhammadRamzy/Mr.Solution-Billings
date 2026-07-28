@@ -3,6 +3,9 @@ import { getInvoices, getBusinessProfile } from "@/lib/db";
 import { generateInvoicePdfBuffer, invoicePdfFilename } from "@/lib/pdf";
 
 export const revalidate = 0;
+// PDF rendering is CPU-bound and can run past Vercel's default 10s function
+// limit on a cold start - give it more headroom.
+export const maxDuration = 30;
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -11,4 +11,20 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const db = getFirestore(app);
+
+let dbInstance: Firestore;
+try {
+  // Serverless platforms (Vercel included) often run in network environments
+  // where the Firestore SDK's default gRPC/WebChannel transport stalls or
+  // never completes its handshake. Auto-detecting long-polling avoids that -
+  // it's the standard fix for Firestore client SDK use in serverless backends.
+  dbInstance = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  });
+} catch {
+  // initializeFirestore throws if it's already been called for this app
+  // (e.g. dev-mode hot reload re-running this module) - reuse the instance.
+  dbInstance = getFirestore(app);
+}
+
+export const db = dbInstance;
