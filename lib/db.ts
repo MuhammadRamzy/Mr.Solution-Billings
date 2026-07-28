@@ -10,6 +10,33 @@ import { BusinessProfile, Client, Invoice, Counters, Expense } from "./types";
 // module-level cache would serve stale data after a write lands on a
 // different instance (looks like "my changes aren't saving").
 
+const FIRESTORE_TIMEOUT_MS = 8000;
+
+// Every Firestore call below is wrapped in this. Without it, a stalled
+// connection (a known failure mode for the Firestore client SDK's
+// gRPC/WebChannel transport in serverless environments) leaves the
+// underlying promise pending forever - the calling server action just hangs
+// and the UI shows an infinite spinner with no error. This forces a clear,
+// catchable failure instead.
+function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`Database ${label} timed out after ${FIRESTORE_TIMEOUT_MS / 1000}s. Check Firestore connectivity, project config, and security rules.`));
+    }, FIRESTORE_TIMEOUT_MS);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 const DEFAULT_PROFILE: BusinessProfile = {
   name: "Mr.Solutions",
   tagline: "",
@@ -47,7 +74,7 @@ const DEFAULT_PROFILE: BusinessProfile = {
 export const getBusinessProfile = cache(async (): Promise<BusinessProfile> => {
   try {
     const docRef = doc(db, "settings", "profile");
-    const docSnap = await getDoc(docRef);
+    const docSnap = await withTimeout(getDoc(docRef), "read (settings/profile)");
     if (docSnap.exists()) {
       const data = docSnap.data();
       return {
@@ -63,13 +90,13 @@ export const getBusinessProfile = cache(async (): Promise<BusinessProfile> => {
 });
 
 export async function saveBusinessProfile(profile: BusinessProfile): Promise<void> {
-  await setDoc(doc(db, "settings", "profile"), profile);
+  await withTimeout(setDoc(doc(db, "settings", "profile"), profile), "write (settings/profile)");
 }
 
 // Client Operations
 export const getClients = cache(async (): Promise<Client[]> => {
   try {
-    const querySnapshot = await getDocs(collection(db, "clients"));
+    const querySnapshot = await withTimeout(getDocs(collection(db, "clients")), "read (clients)");
     const list: Client[] = [];
     querySnapshot.forEach((d) => list.push(d.data() as Client));
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -80,17 +107,17 @@ export const getClients = cache(async (): Promise<Client[]> => {
 });
 
 export async function saveClient(client: Client): Promise<void> {
-  await setDoc(doc(db, "clients", client.id), client);
+  await withTimeout(setDoc(doc(db, "clients", client.id), client), "write (clients)");
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  await deleteDoc(doc(db, "clients", id));
+  await withTimeout(deleteDoc(doc(db, "clients", id)), "delete (clients)");
 }
 
 // Invoice Operations
 export const getInvoices = cache(async (): Promise<Invoice[]> => {
   try {
-    const querySnapshot = await getDocs(collection(db, "invoices"));
+    const querySnapshot = await withTimeout(getDocs(collection(db, "invoices")), "read (invoices)");
     const list: Invoice[] = [];
     querySnapshot.forEach((d) => list.push(d.data() as Invoice));
     return list.sort((a, b) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime());
@@ -101,11 +128,11 @@ export const getInvoices = cache(async (): Promise<Invoice[]> => {
 });
 
 export async function saveInvoice(invoice: Invoice): Promise<void> {
-  await setDoc(doc(db, "invoices", invoice.id), invoice);
+  await withTimeout(setDoc(doc(db, "invoices", invoice.id), invoice), "write (invoices)");
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
-  await deleteDoc(doc(db, "invoices", id));
+  await withTimeout(deleteDoc(doc(db, "invoices", id)), "delete (invoices)");
 }
 
 // Counters Operations
@@ -113,7 +140,7 @@ export const getCounters = cache(async (): Promise<Counters> => {
   const defaultCounters: Counters = { invoiceCounters: {}, quoteCounters: {} };
   try {
     const docRef = doc(db, "settings", "counters");
-    const docSnap = await getDoc(docRef);
+    const docSnap = await withTimeout(getDoc(docRef), "read (settings/counters)");
     if (docSnap.exists()) {
       const data = docSnap.data();
       return { invoiceCounters: data.invoiceCounters || {}, quoteCounters: data.quoteCounters || {} };
@@ -125,13 +152,13 @@ export const getCounters = cache(async (): Promise<Counters> => {
 });
 
 export async function saveCounters(counters: Counters): Promise<void> {
-  await setDoc(doc(db, "settings", "counters"), counters);
+  await withTimeout(setDoc(doc(db, "settings", "counters"), counters), "write (settings/counters)");
 }
 
 // Expense Operations
 export const getExpenses = cache(async (): Promise<Expense[]> => {
   try {
-    const querySnapshot = await getDocs(collection(db, "expenses"));
+    const querySnapshot = await withTimeout(getDocs(collection(db, "expenses")), "read (expenses)");
     const list: Expense[] = [];
     querySnapshot.forEach((d) => list.push(d.data() as Expense));
     return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -142,18 +169,18 @@ export const getExpenses = cache(async (): Promise<Expense[]> => {
 });
 
 export async function saveExpense(expense: Expense): Promise<void> {
-  await setDoc(doc(db, "expenses", expense.id), expense);
+  await withTimeout(setDoc(doc(db, "expenses", expense.id), expense), "write (expenses)");
 }
 
 export async function deleteExpense(id: string): Promise<void> {
-  await deleteDoc(doc(db, "expenses", id));
+  await withTimeout(deleteDoc(doc(db, "expenses", id)), "delete (expenses)");
 }
 
 // Authentication Password Hash Operations
 export async function getPasswordHash(): Promise<string> {
   try {
     const docRef = doc(db, "settings", "auth");
-    const docSnap = await getDoc(docRef);
+    const docSnap = await withTimeout(getDoc(docRef), "read (settings/auth)");
     if (docSnap.exists() && docSnap.data().passwordHash) {
       return docSnap.data().passwordHash;
     }
@@ -166,5 +193,5 @@ export async function getPasswordHash(): Promise<string> {
 }
 
 export async function savePasswordHash(hash: string): Promise<void> {
-  await setDoc(doc(db, "settings", "auth"), { passwordHash: hash });
+  await withTimeout(setDoc(doc(db, "settings", "auth"), { passwordHash: hash }), "write (settings/auth)");
 }

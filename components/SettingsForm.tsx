@@ -133,6 +133,8 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
       if (res.success) {
         setSuccess(true);
         router.refresh();
+      } else {
+        setErrors({ general: res.error });
       }
     } catch (err: any) {
       console.error(err);

@@ -191,12 +191,16 @@ export default function ExpensesList({ initialExpenses, profile }: ExpensesListP
         if (res.success && res.expense) {
           setExpenses((prev) => prev.map((e) => (e.id === editingExpense.id ? res.expense! : e)));
           setIsModalOpen(false);
+        } else if (!res.success) {
+          setFormError(res.error);
         }
       } else {
         const res = await createExpenseAction(payload);
         if (res.success && res.expense) {
           setExpenses((prev) => [res.expense!, ...prev]);
           setIsModalOpen(false);
+        } else if (!res.success) {
+          setFormError(res.error);
         }
       }
     } catch (err: any) {
@@ -212,6 +216,8 @@ export default function ExpensesList({ initialExpenses, profile }: ExpensesListP
         const res = await deleteExpenseAction(id);
         if (res.success) {
           setExpenses((prev) => prev.filter((e) => e.id !== id));
+        } else {
+          alert(res.error || "Failed to delete expense record.");
         }
       } catch (err) {
         alert("Failed to delete expense record.");

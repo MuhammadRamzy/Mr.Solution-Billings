@@ -210,6 +210,8 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
 
       if (result.success && result.invoice) {
         router.push(`/invoices/${result.invoice.id}`);
+      } else if (!result.success) {
+        setErrors({ general: result.error });
       }
     } catch (err: any) {
       console.error(err);

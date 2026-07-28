@@ -98,8 +98,12 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
   const handleDelete = async (id: string, no: string) => {
     if (confirm(`Are you sure you want to permanently delete invoice "${no}"?`)) {
       try {
-        await deleteInvoiceAction(id);
-        setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+        const res = await deleteInvoiceAction(id);
+        if (res.success) {
+          setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+        } else {
+          alert(res.error || "Failed to delete invoice.");
+        }
       } catch (err: any) {
         alert(err.message || "Failed to delete invoice.");
       }

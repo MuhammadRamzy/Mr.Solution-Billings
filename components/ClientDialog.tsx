@@ -90,6 +90,8 @@ export default function ClientDialog({ isOpen, onClose, onSuccess, client }: Cli
           onSuccess(result.client);
         }
         onClose();
+      } else {
+        setErrors({ general: result.error });
       }
     } catch (err: any) {
       if (err.name === "ZodError" || err.errors) {

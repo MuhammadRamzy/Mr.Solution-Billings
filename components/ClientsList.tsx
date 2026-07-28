@@ -54,8 +54,12 @@ export default function ClientsList({ initialClients }: ClientsListProps) {
     e.stopPropagation();
     if (confirm(`Delete client "${name}"? This will not delete their existing invoices.`)) {
       try {
-        await deleteClientAction(id);
-        setClients((prev) => prev.filter((c) => c.id !== id));
+        const res = await deleteClientAction(id);
+        if (res.success) {
+          setClients((prev) => prev.filter((c) => c.id !== id));
+        } else {
+          alert(res.error || "Failed to delete client.");
+        }
       } catch (err: any) {
         alert(err.message || "Failed to delete client.");
       }

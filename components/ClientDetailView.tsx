@@ -41,9 +41,13 @@ export default function ClientDetailView({ client: initialClient, invoices }: Cl
   const handleDelete = async () => {
     if (confirm(`Delete client "${client.name}"? This will not delete their existing invoices.`)) {
       try {
-        await deleteClientAction(client.id);
-        router.push("/clients");
-        router.refresh();
+        const res = await deleteClientAction(client.id);
+        if (res.success) {
+          router.push("/clients");
+          router.refresh();
+        } else {
+          alert(res.error || "Failed to delete client.");
+        }
       } catch (err: any) {
         alert(err.message || "Failed to delete client.");
       }

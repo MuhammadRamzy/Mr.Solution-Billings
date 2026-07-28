@@ -93,6 +93,8 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       if (res.success) {
         setInvoice((prev) => ({ ...prev, status: newStatus }));
         router.refresh();
+      } else {
+        alert(res.error || "Failed to update status");
       }
     } catch (err) {
       console.error(err);
@@ -112,6 +114,8 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       if (res.success && res.invoice) {
         router.push(`/invoices/${res.invoice.id}`);
         router.refresh();
+      } else if (!res.success) {
+        alert(res.error || "Failed to convert quote to invoice");
       }
     } catch (err: any) {
       console.error(err);
@@ -152,6 +156,8 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
         setInvoice(res.invoice);
         setIsPaymentModalOpen(false);
         router.refresh();
+      } else if (!res.success) {
+        setPaymentError(res.error || "Failed to record payment");
       }
     } catch (err: any) {
       setPaymentError(err.message || "Failed to record payment");
@@ -167,6 +173,8 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       if (res.success && res.invoice) {
         setInvoice(res.invoice);
         router.refresh();
+      } else if (!res.success) {
+        alert(res.error || "Failed to remove payment");
       }
     } catch (err: any) {
       alert(err.message || "Failed to remove payment");
