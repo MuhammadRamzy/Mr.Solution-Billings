@@ -26,7 +26,6 @@ interface FormLineItem {
   unit: string;
   rate: number;
   discountPercent: number;
-  taxPercent: number;
   // UI-only: when "total", the user enters the agreed total amount for this
   // line and the per-unit rate is back-calculated from quantity - useful when
   // a flat price was negotiated up front and hours are logged afterward.
@@ -69,7 +68,6 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
 
   const [showLogo, setShowLogo] = useState(invoice?.display?.showLogo !== false);
   const [showPaymentDetails, setShowPaymentDetails] = useState(invoice?.display?.showPaymentDetails !== false);
-  const [showTaxBreakdown, setShowTaxBreakdown] = useState(invoice?.display?.showTaxBreakdown !== false);
   const [showNotes, setShowNotes] = useState(invoice?.display?.showNotes !== false);
 
   const [lineItems, setLineItems] = useState<FormLineItem[]>(() => {
@@ -82,7 +80,6 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
         unit: item.unit,
         rate: item.rate,
         discountPercent: item.discountPercent,
-        taxPercent: item.taxPercent,
         entryMode: "rate" as const,
       }));
     }
@@ -95,7 +92,6 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
         unit: "hrs",
         rate: 0,
         discountPercent: 0,
-        taxPercent: profile.defaultTaxPercent || 0,
         entryMode: "rate" as const,
       },
     ];
@@ -130,7 +126,6 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
         unit: "hrs",
         rate: 0,
         discountPercent: 0,
-        taxPercent: profile.defaultTaxPercent || 0,
         entryMode: "rate",
       },
     ]);
@@ -181,34 +176,25 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
   // Live calculations
   let calculatedSubtotal = 0;
   let calculatedTotalDiscount = 0;
-  let calculatedTaxableValueTotal = 0;
-  let calculatedTaxTotal = 0;
 
   const processedLines = lineItems.map((item) => {
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
     const discPercent = Number(item.discountPercent) || 0;
-    const taxPercent = Number(item.taxPercent) || 0;
 
     const rowSubtotal = qty * rate;
     const rowDiscount = rowSubtotal * (discPercent / 100);
-    const rowTaxable = Math.round((rowSubtotal - rowDiscount + Number.EPSILON) * 100) / 100;
-    const rowTax = Math.round((rowTaxable * (taxPercent / 100) + Number.EPSILON) * 100) / 100;
-    const rowTotal = Math.round((rowTaxable + rowTax + Number.EPSILON) * 100) / 100;
+    const rowTotal = Math.round((rowSubtotal - rowDiscount + Number.EPSILON) * 100) / 100;
 
     calculatedSubtotal += rowSubtotal;
     calculatedTotalDiscount += rowDiscount;
-    calculatedTaxableValueTotal += rowTaxable;
-    calculatedTaxTotal += rowTax;
 
-    return { taxable: rowTaxable, tax: rowTax, total: rowTotal };
+    return { total: rowTotal };
   });
 
   calculatedSubtotal = Math.round((calculatedSubtotal + Number.EPSILON) * 100) / 100;
   calculatedTotalDiscount = Math.round((calculatedTotalDiscount + Number.EPSILON) * 100) / 100;
-  calculatedTaxableValueTotal = Math.round((calculatedTaxableValueTotal + Number.EPSILON) * 100) / 100;
-  calculatedTaxTotal = Math.round((calculatedTaxTotal + Number.EPSILON) * 100) / 100;
-  const calculatedGrandTotal = Math.round((calculatedTaxableValueTotal + calculatedTaxTotal + Number.EPSILON) * 100) / 100;
+  const calculatedGrandTotal = Math.round((calculatedSubtotal - calculatedTotalDiscount + Number.EPSILON) * 100) / 100;
 
   const handleSave = async () => {
     if (!selectedClientId) {
@@ -237,12 +223,12 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
         unit: item.unit,
         rate: Number(item.rate) || 0,
         discountPercent: Number(item.discountPercent) || 0,
-        taxPercent: Number(item.taxPercent) || 0,
+        taxPercent: 0,
       })),
       notes: notes || null,
       paymentInstructions: paymentInstructions || null,
       status,
-      display: { showLogo, showPaymentDetails, showTaxBreakdown, showNotes },
+      display: { showLogo, showPaymentDetails, showNotes },
     };
 
     try {
@@ -511,7 +497,7 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                           Qty / Hours
@@ -588,26 +574,9 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                           className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
                         />
                       </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Tax %
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          value={item.taxPercent}
-                          onChange={(e) => updateLineItem(item.id, { taxPercent: parseFloat(e.target.value) || 0 })}
-                          className="w-full text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:border-indigo-500 focus:outline-none bg-white"
-                        />
-                      </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-100 flex justify-between text-[11px] text-slate-500 font-semibold">
-                      <span>Taxable: {formatCurrency(calc.taxable, profile.currency)}</span>
-                      {calc.tax > 0 && <span>Tax: {formatCurrency(calc.tax, profile.currency)}</span>}
+                    <div className="pt-2 border-t border-slate-100 flex justify-end text-[11px] text-slate-500 font-semibold">
                       <span className="text-slate-800 font-extrabold">
                         Line Total: {formatCurrency(calc.total, profile.currency)}
                       </span>
@@ -691,15 +660,6 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
               <label className="flex items-center gap-2 cursor-pointer py-1 select-none">
                 <input
                   type="checkbox"
-                  checked={showTaxBreakdown}
-                  onChange={(e) => setShowTaxBreakdown(e.target.checked)}
-                  className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-slate-350 cursor-pointer"
-                />
-                <span className="text-sm font-semibold text-slate-700">Tax Breakdown</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer py-1 select-none">
-                <input
-                  type="checkbox"
                   checked={showNotes}
                   onChange={(e) => setShowNotes(e.target.checked)}
                   className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-slate-350 cursor-pointer"
@@ -727,16 +687,6 @@ export default function InvoiceForm({ profile, initialClients, invoice, preselec
                 <div className="flex justify-between text-slate-400">
                   <span>Total Discount:</span>
                   <span className="font-semibold text-rose-400">-{formatCurrency(calculatedTotalDiscount, profile.currency)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-slate-300 font-bold border-t border-slate-800 pt-2">
-                <span>Taxable Value:</span>
-                <span>{formatCurrency(calculatedTaxableValueTotal, profile.currency)}</span>
-              </div>
-              {calculatedTaxTotal > 0 && (
-                <div className="flex justify-between text-slate-400">
-                  <span>Tax Total:</span>
-                  <span>{formatCurrency(calculatedTaxTotal, profile.currency)}</span>
                 </div>
               )}
 

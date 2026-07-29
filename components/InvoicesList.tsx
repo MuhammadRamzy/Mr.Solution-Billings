@@ -111,15 +111,15 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
   };
 
   const handleExportCsv = () => {
-    const headers = ["Type", "Doc No", "Client", "Date", "Due Date", "Taxable Value", "Tax", "Grand Total", "Amount Paid", "Balance Due", "Status"];
+    const headers = ["Type", "Doc No", "Client", "Date", "Due Date", "Subtotal", "Discount", "Grand Total", "Amount Paid", "Balance Due", "Status"];
     const rows = filteredInvoices.map((inv) => [
       inv.type,
       inv.invoiceNo,
       inv.clientSnapshot.name,
       inv.invoiceDate,
       inv.dueDate || "",
-      inv.taxableValueTotal.toString(),
-      inv.taxTotal.toString(),
+      inv.subtotal.toString(),
+      inv.totalDiscount.toString(),
       inv.grandTotal.toString(),
       inv.amountPaid.toString(),
       inv.balanceDue.toString(),

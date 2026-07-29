@@ -591,8 +591,6 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                   <th className="py-2.5 px-3 text-right w-14 text-[9px] font-black text-indigo-700 uppercase tracking-wide">Qty</th>
                   <th className="py-2.5 px-3 text-center w-14 text-[9px] font-black text-indigo-700 uppercase tracking-wide">Unit</th>
                   <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide">Rate</th>
-                  <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide">Taxable</th>
-                  <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide">Tax</th>
                   <th className="py-2.5 px-3 text-right text-[9px] font-black text-indigo-700 uppercase tracking-wide rounded-r-md">Amount</th>
                 </tr>
               </thead>
@@ -619,10 +617,6 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                     <td className="py-3 px-3 text-right text-slate-600">{item.quantity}</td>
                     <td className="py-3 px-3 text-center text-slate-400 uppercase text-[9px] font-semibold">{item.unit}</td>
                     <td className="py-3 px-3 text-right text-slate-600">{formatCurrency(item.rate, currency)}</td>
-                    <td className="py-3 px-3 text-right text-slate-600">{formatCurrency(item.taxableValue, currency)}</td>
-                    <td className="py-3 px-3 text-right text-slate-600">
-                      {item.taxAmount > 0 ? formatCurrency(item.taxAmount, currency) : "-"}
-                    </td>
                     <td className="py-3 px-3 text-right font-bold text-slate-900">{formatCurrency(item.amount, currency)}</td>
                   </tr>
                 ))}
@@ -653,9 +647,6 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="font-bold text-slate-900 text-xs">{formatCurrency(item.amount, currency)}</div>
-                    {item.taxAmount > 0 && (
-                      <div className="text-[10px] text-slate-400 mt-0.5">+{formatCurrency(item.taxAmount, currency)} tax</div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -760,20 +751,6 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                   <div className="flex justify-between text-slate-500">
                     <span>Discount</span>
                     <span className="font-semibold text-rose-500">-{formatCurrency(invoice.totalDiscount, currency)}</span>
-                  </div>
-                )}
-                {invoice.display.showTaxBreakdown && (
-                  <div className="space-y-2 border-t border-slate-100 pt-2">
-                    <div className="flex justify-between text-slate-800 font-bold">
-                      <span>Taxable Value</span>
-                      <span>{formatCurrency(invoice.taxableValueTotal, currency)}</span>
-                    </div>
-                    {invoice.taxTotal > 0 && (
-                      <div className="flex justify-between text-[11px] text-slate-500">
-                        <span>Tax</span>
-                        <span>{formatCurrency(invoice.taxTotal, currency)}</span>
-                      </div>
-                    )}
                   </div>
                 )}
                 <div className="flex justify-between items-center border-t-2 border-indigo-600 pt-3 mt-1">

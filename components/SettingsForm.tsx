@@ -61,12 +61,12 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
     setPwdError(null);
 
     if (newPassword !== confirmPassword) {
-      setPwdError("New passwords do not match");
+      setPwdError("New PINs do not match");
       setPwdLoading(false);
       return;
     }
-    if (newPassword.length < 6) {
-      setPwdError("Password must be at least 6 characters long");
+    if (!/^\d{4,6}$/.test(newPassword)) {
+      setPwdError("PIN must be 4 to 6 digits");
       setPwdLoading(false);
       return;
     }
@@ -96,10 +96,7 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
       return updated;
     });
 
-    if (path === "defaultTaxPercent") {
-      const parsedVal = parseFloat(value);
-      setFormData((prev) => ({ ...prev, defaultTaxPercent: isNaN(parsedVal) ? 0 : parsedVal }));
-    } else if (path === "defaultPaymentDueDays" || path === "defaultQuoteValidityDays") {
+    if (path === "defaultPaymentDueDays" || path === "defaultQuoteValidityDays") {
       const parsedVal = parseInt(value, 10);
       setFormData((prev) => ({ ...prev, [path]: isNaN(parsedVal) ? 0 : parsedVal }));
     } else if (path.startsWith("bank.")) {
@@ -522,19 +519,6 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">Default Tax Rate (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={formData.defaultTaxPercent ?? 0}
-                  onChange={(e) => handleChange("defaultTaxPercent", e.target.value)}
-                  className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-mono"
-                />
-              </div>
-
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">Default Notes / Terms & Conditions</label>
                 <textarea
@@ -554,14 +538,14 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
       <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-5">
         <h2 className="text-base font-extrabold text-slate-900 border-b border-slate-50 pb-3 flex items-center gap-2">
           <Key className="h-5 w-5 text-indigo-600" />
-          Password
+          PIN
         </h2>
-        <p className="text-xs text-slate-500">Change the password used to sign in to this billing console.</p>
+        <p className="text-xs text-slate-500">Change the 4-6 digit PIN used to sign in to this billing console.</p>
 
         {pwdSuccess && (
           <div className="p-4 bg-emerald-50 text-emerald-800 text-sm font-bold rounded-xl flex items-center gap-2 border border-emerald-100 animate-in fade-in duration-200">
             <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
-            <span>Password updated successfully.</span>
+            <span>PIN updated successfully.</span>
           </div>
         )}
         {pwdError && (
@@ -573,36 +557,42 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <div>
-              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">Current Password *</label>
+              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">Current PIN *</label>
               <input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 required
                 value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-semibold"
+                onChange={(e) => setCurrentPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="••••"
+                className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-semibold tracking-[0.3em]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">New Password *</label>
+              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">New PIN *</label>
               <input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 required
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-semibold"
+                onChange={(e) => setNewPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="••••"
+                className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-semibold tracking-[0.3em]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">Confirm New Password *</label>
+              <label className="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-1.5">Confirm New PIN *</label>
               <input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 required
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-semibold"
+                onChange={(e) => setConfirmPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="••••"
+                className="w-full text-sm rounded-lg border border-slate-200 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none text-slate-800 font-semibold tracking-[0.3em]"
               />
             </div>
           </div>
@@ -614,7 +604,7 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
               className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md transition-all duration-150 active:scale-95 text-xs disabled:opacity-75 cursor-pointer"
             >
               {pwdLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
-              Update Password
+              Update PIN
             </button>
           </div>
         </form>

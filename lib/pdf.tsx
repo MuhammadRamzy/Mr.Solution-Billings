@@ -404,11 +404,10 @@ const styles = StyleSheet.create({
 
 const COLS = {
   sl: "6%",
-  desc: "36%",
-  qty: "9%",
-  unit: "8%",
-  rate: "13%",
-  taxable: "13%",
+  desc: "44%",
+  qty: "10%",
+  unit: "10%",
+  rate: "15%",
   amount: "15%",
 };
 
@@ -501,7 +500,6 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl, upiUri }: Invo
               <Text style={[styles.th, { width: COLS.qty, textAlign: "right" }]}>Qty</Text>
               <Text style={[styles.th, { width: COLS.unit, textAlign: "center" }]}>Unit</Text>
               <Text style={[styles.th, { width: COLS.rate, textAlign: "right" }]}>Rate</Text>
-              <Text style={[styles.th, { width: COLS.taxable, textAlign: "right" }]}>Taxable</Text>
               <Text style={[styles.th, { width: COLS.amount, textAlign: "right" }]}>Amount</Text>
             </View>
 
@@ -509,7 +507,10 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl, upiUri }: Invo
               <View style={styles.tableRow} key={idx} wrap={false}>
                 <Text style={[styles.td, { width: COLS.sl, textAlign: "center" }]}>{item.slNo}</Text>
                 <View style={{ width: COLS.desc }}>
-                  <Text style={styles.tdStrong}>{item.description}</Text>
+                  <Text style={styles.tdStrong}>
+                    {item.description}
+                    {item.discountPercent > 0 ? <Text style={{ color: RED, fontSize: 7.5 }}> (-{item.discountPercent}%)</Text> : null}
+                  </Text>
                   {item.url ? (
                     <Link src={item.url} style={styles.itemUrl}>
                       {item.url}
@@ -521,7 +522,6 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl, upiUri }: Invo
                   {item.unit}
                 </Text>
                 <Text style={[styles.td, { width: COLS.rate, textAlign: "right" }]}>{item.rate.toFixed(2)}</Text>
-                <Text style={[styles.td, { width: COLS.taxable, textAlign: "right" }]}>{item.taxableValue.toFixed(2)}</Text>
                 <Text style={[styles.tdStrong, { width: COLS.amount, textAlign: "right" }]}>{item.amount.toFixed(2)}</Text>
               </View>
             ))}
@@ -610,21 +610,6 @@ const InvoiceDocument = ({ invoice, profile, logoPath, qrDataUrl, upiUri }: Invo
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Discount</Text>
                   <Text style={[styles.summaryVal, { color: RED }]}>-{fmt(invoice.totalDiscount)}</Text>
-                </View>
-              )}
-              {invoice.display.showTaxBreakdown && (
-                <View style={styles.summaryDivider}>
-                  <View style={styles.summaryRow}>
-                    <Text style={[styles.summaryLabel, { fontFamily: "Roboto",
-    fontWeight: "bold", color: INK }]}>Taxable Value</Text>
-                    <Text style={styles.summaryVal}>{fmt(invoice.taxableValueTotal)}</Text>
-                  </View>
-                  {invoice.taxTotal > 0 && (
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Tax</Text>
-                      <Text style={styles.summaryVal}>{fmt(invoice.taxTotal)}</Text>
-                    </View>
-                  )}
                 </View>
               )}
 

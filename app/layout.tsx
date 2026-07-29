@@ -23,7 +23,8 @@ export const metadata: Metadata = {
     title: "MyBilling",
   },
   icons: {
-    apple: "/logo_with_bg.png",
+    apple: "/icon-192.png",
+    icon: "/icon-192.png",
   },
 };
 

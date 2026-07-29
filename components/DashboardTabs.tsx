@@ -32,7 +32,6 @@ interface DashboardTabsProps {
   monthlyData: MonthlyDataPoint[];
   maxVal: number;
   statusBreakdown: Record<string, StatusBucket>;
-  totalTaxCollected: number;
   totalTaxPaidOnExpenses: number;
 
   totalRevenue: number;
@@ -62,7 +61,6 @@ export default function DashboardTabs({
   monthlyData,
   maxVal,
   statusBreakdown,
-  totalTaxCollected,
   totalTaxPaidOnExpenses,
   totalRevenue,
   totalExpensesAllTime,
@@ -183,16 +181,10 @@ export default function DashboardTabs({
           </div>
         )}
 
-        {(totalTaxCollected > 0 || totalTaxPaidOnExpenses > 0) && (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2 mt-2">
-            <div className="flex justify-between text-[11px] font-semibold">
-              <span className="text-slate-500">Tax Collected on Invoices:</span>
-              <span className="font-bold text-slate-800">{formatCurrency(totalTaxCollected, currency)}</span>
-            </div>
-            <div className="flex justify-between text-[11px] font-semibold">
-              <span className="text-slate-500">Tax Paid on Expenses:</span>
-              <span className="font-bold text-slate-800">{formatCurrency(totalTaxPaidOnExpenses, currency)}</span>
-            </div>
+        {totalTaxPaidOnExpenses > 0 && (
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between mt-2">
+            <span className="text-[11px] font-semibold text-slate-500">Tax Paid on Expenses (for your records):</span>
+            <span className="text-[11px] font-bold text-slate-800">{formatCurrency(totalTaxPaidOnExpenses, currency)}</span>
           </div>
         )}
       </div>

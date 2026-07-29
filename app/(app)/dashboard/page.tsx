@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { Plus, TrendingUp, IndianRupee, TrendingDown, Wallet } from "lucide-react";
+import { Plus, TrendingUp, IndianRupee, TrendingDown, Wallet, AlertTriangle } from "lucide-react";
 import { getInvoices, getClients, getExpenses, getBusinessProfile } from "@/lib/db";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import DashboardTabs from "@/components/DashboardTabs";
 
 export const revalidate = 0;
@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   let totalOutstanding = 0;
   let totalBilledThisMonth = 0;
   let totalExpensesThisMonth = 0;
-  let totalTaxCollected = 0;
+  let totalOverdue = 0;
   let totalTaxPaidOnExpenses = 0;
 
   const monthlyRevenueMap: Record<string, number> = {};
@@ -47,6 +47,9 @@ export default async function DashboardPage() {
     if (inv.status === "sent" || inv.status === "partial" || inv.status === "overdue") {
       totalOutstanding += inv.balanceDue;
     }
+    if (inv.status === "overdue") {
+      totalOverdue += inv.balanceDue;
+    }
 
     if (invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear) {
       totalBilledThisMonth += inv.grandTotal;
@@ -56,8 +59,6 @@ export default async function DashboardPage() {
     statusBreakdown[inv.status].total += inv.grandTotal;
 
     if (inv.status !== "draft") {
-      totalTaxCollected += inv.taxTotal;
-
       const monthKey = inv.invoiceDate.substring(0, 7);
       monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + inv.grandTotal;
 
@@ -72,6 +73,10 @@ export default async function DashboardPage() {
 
   const quotesPending = quotes.filter((q) => q.status === "sent");
   const quotesPendingValue = quotesPending.reduce((acc, q) => acc + q.grandTotal, 0);
+
+  const overdueInvoices = invoices
+    .filter((i) => i.status === "overdue")
+    .sort((a, b) => new Date(a.dueDate || a.invoiceDate).getTime() - new Date(b.dueDate || b.invoiceDate).getTime());
 
   const expenseCategoriesMap: Record<string, number> = {};
   for (const exp of expenses) {
@@ -161,6 +166,30 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {overdueInvoices.length > 0 && (
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 flex-1">
+            <div className="p-2 bg-rose-100 rounded-xl text-rose-600 shrink-0">
+              <AlertTriangle className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-rose-900">
+                {overdueInvoices.length} overdue invoice{overdueInvoices.length > 1 ? "s" : ""} &bull; {formatCurrency(totalOverdue, currency)} to chase
+              </p>
+              <p className="text-xs text-rose-700 mt-0.5 truncate">
+                Oldest: {overdueInvoices[0].invoiceNo} ({overdueInvoices[0].clientSnapshot.name}) - due {formatDate(overdueInvoices[0].dueDate || overdueInvoices[0].invoiceDate)}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={`/invoices/${overdueInvoices[0].id}`}
+            className="inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 self-start sm:self-auto"
+          >
+            View & Remind
+          </Link>
+        </div>
+      )}
+
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
@@ -244,7 +273,6 @@ export default async function DashboardPage() {
         monthlyData={monthlyData}
         maxVal={maxVal}
         statusBreakdown={statusBreakdown}
-        totalTaxCollected={totalTaxCollected}
         totalTaxPaidOnExpenses={totalTaxPaidOnExpenses}
         totalRevenue={totalRevenue}
         totalExpensesAllTime={totalExpensesAllTime}

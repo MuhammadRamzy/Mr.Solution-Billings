@@ -183,8 +183,8 @@ export async function getPasswordHash(): Promise<string> {
   } catch (error) {
     console.error("Error reading password hash from Firestore:", error);
   }
-  // Default fallback password hash for "billing123" - change this immediately from Settings.
-  const defaultHash = "c5ea86a08b0f74e49810b3bda1f3f2e286cc394056948cbd5fe4d627d46c0425";
+  // Default fallback PIN hash for "123456" - change this immediately from Settings.
+  const defaultHash = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92";
   return defaultHash;
 }
 

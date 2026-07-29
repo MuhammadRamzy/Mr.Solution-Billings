@@ -164,7 +164,7 @@ interface InvoiceInput {
   notes?: string | null;
   paymentInstructions?: string | null;
   status: "draft" | "sent" | "accepted" | "declined";
-  display: { showLogo: boolean; showPaymentDetails: boolean; showTaxBreakdown: boolean; showNotes: boolean };
+  display: { showLogo: boolean; showPaymentDetails: boolean; showNotes: boolean };
 }
 
 export async function createInvoiceAction(data: InvoiceInput) {
@@ -624,10 +624,14 @@ export async function logoutAction() {
 
 export async function changePasswordAction(oldPassword: string, newPassword: string) {
   try {
+    if (!/^\d{4,6}$/.test(newPassword)) {
+      return { success: false as const, error: "PIN must be 4 to 6 digits" };
+    }
+
     const [savedHash, oldHash] = await Promise.all([getPasswordHash(), hashPassword(oldPassword)]);
 
     if (savedHash !== oldHash) {
-      return { success: false as const, error: "Incorrect current password" };
+      return { success: false as const, error: "Incorrect current PIN" };
     }
 
     const newHash = await hashPassword(newPassword);

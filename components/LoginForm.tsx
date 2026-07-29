@@ -11,26 +11,30 @@ function LoginInner({ profile }: { profile: BusinessProfile }) {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
 
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [pin, setPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const handlePinChange = (raw: string) => {
+    setPin(raw.replace(/\D/g, "").slice(0, 6));
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) {
-      setError("Please enter the password");
+    if (pin.length < 4) {
+      setError("Enter your 4-6 digit PIN");
       return;
     }
 
     setError(null);
     startTransition(async () => {
-      const res = await loginAction(password);
+      const res = await loginAction(pin);
       if (res.success) {
         router.push(redirectTo);
         router.refresh();
       } else {
-        setError(res.error || "Incorrect password");
+        setError(res.error || "Incorrect PIN");
       }
     });
   };
@@ -56,7 +60,7 @@ function LoginInner({ profile }: { profile: BusinessProfile }) {
         <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/50 p-6 sm:p-8 shadow-xl shadow-slate-900/5">
           <div className="mb-6">
             <h3 className="text-base font-bold text-slate-900">Sign In</h3>
-            <p className="text-xs text-slate-500 mt-1">Enter your password to access the billing dashboard.</p>
+            <p className="text-xs text-slate-500 mt-1">Enter your PIN to access the billing dashboard.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -68,27 +72,30 @@ function LoginInner({ profile }: { profile: BusinessProfile }) {
             )}
 
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Password</label>
+              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">PIN</label>
               <div className="relative rounded-xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Lock className="h-4 w-4" />
                 </div>
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPin ? "text" : "password"}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]*"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  value={pin}
+                  onChange={(e) => handlePinChange(e.target.value)}
+                  placeholder="••••"
                   disabled={isPending}
-                  className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder-slate-300 disabled:opacity-50"
+                  className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 text-lg font-bold tracking-[0.4em] focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder-slate-300 disabled:opacity-50"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPin(!showPin)}
                   disabled={isPending}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-650 disabled:opacity-50"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -112,8 +119,6 @@ function LoginInner({ profile }: { profile: BusinessProfile }) {
             </button>
           </form>
         </div>
-
-        <p className="text-center text-[10px] text-slate-400 font-medium">Default password is set in Settings after first login.</p>
       </div>
     </div>
   );

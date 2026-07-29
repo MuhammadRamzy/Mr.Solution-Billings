@@ -80,7 +80,6 @@ export const PaymentSchema = z.object({
 export const DisplayOptionsSchema = z.object({
   showLogo: z.boolean().default(true),
   showPaymentDetails: z.boolean().default(true),
-  showTaxBreakdown: z.boolean().default(true),
   showNotes: z.boolean().default(true),
 });
 
@@ -115,7 +114,7 @@ export const InvoiceSchema = z.object({
   status: z.enum(["draft", "sent", "accepted", "declined", "partial", "paid", "overdue"]),
   convertedToInvoiceId: z.string().uuid().optional().nullable(),
   convertedFromQuoteId: z.string().uuid().optional().nullable(),
-  display: DisplayOptionsSchema.default({ showLogo: true, showPaymentDetails: true, showTaxBreakdown: true, showNotes: true }),
+  display: DisplayOptionsSchema.default({ showLogo: true, showPaymentDetails: true, showNotes: true }),
   notes: z.string().optional().nullable(),
   paymentInstructions: z.string().optional().nullable(),
   lastReminderSentAt: z.string().optional().nullable(),

@@ -173,7 +173,6 @@ export function buildEmailHtml(opts: {
               <td style="padding:6px 12px;font-size:12px;color:#334155;text-align:right;">${fmt(invoice.subtotal)}</td>
             </tr>
             ${invoice.totalDiscount > 0 ? `<tr><td style="padding:6px 12px;font-size:12px;color:#64748b;">Discount</td><td style="padding:6px 12px;font-size:12px;color:#dc2626;text-align:right;">-${fmt(invoice.totalDiscount)}</td></tr>` : ""}
-            ${invoice.display.showTaxBreakdown && invoice.taxTotal > 0 ? `<tr><td style="padding:6px 12px;font-size:12px;color:#64748b;">Tax</td><td style="padding:6px 12px;font-size:12px;color:#334155;text-align:right;">${fmt(invoice.taxTotal)}</td></tr>` : ""}
             <tr>
               <td style="padding:8px 12px;font-size:15px;color:#0f172a;font-weight:800;border-top:2px solid #0f172a;">Grand Total</td>
               <td style="padding:8px 12px;font-size:18px;color:${ACCENT};font-weight:800;text-align:right;border-top:2px solid #0f172a;">${fmt(invoice.grandTotal)}</td>
