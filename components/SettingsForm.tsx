@@ -144,15 +144,15 @@ export default function SettingsForm({ initialProfile }: SettingsFormProps) {
   return (
     <div className="space-y-8 max-w-4xl mx-auto pb-16">
       <form onSubmit={handleSave} className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-5">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Settings</h1>
-            <p className="text-sm text-slate-600 mt-1">Configure your business profile, currency, and default invoice terms.</p>
+            <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Settings</h1>
+            <p className="hidden sm:block text-sm text-slate-600 mt-1">Configure your business profile, currency, and default invoice terms.</p>
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm disabled:opacity-70 self-start sm:self-auto cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm disabled:opacity-70 shrink-0 cursor-pointer"
           >
             {loading ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Save className="h-4.5 w-4.5" />}
             Save Settings

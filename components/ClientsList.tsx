@@ -68,17 +68,17 @@ export default function ClientsList({ initialClients }: ClientsListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="h-7 w-7 text-indigo-600 shrink-0" />
+          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+            <Users className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-600 shrink-0" />
             Clients
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Manage the people and companies you bill.</p>
+          <p className="hidden sm:block text-sm text-slate-500 mt-1">Manage the people and companies you bill.</p>
         </div>
         <button
           onClick={handleOpenAddModal}
-          className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm shrink-0"
         >
           <Plus className="h-4 w-4" />
           Add Client

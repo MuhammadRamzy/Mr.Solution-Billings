@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -22,6 +22,7 @@ import {
   Mail,
   Loader2,
   BellRing,
+  MoreHorizontal,
 } from "lucide-react";
 import { Invoice, BusinessProfile, Client, Payment } from "@/lib/types";
 import {
@@ -81,11 +82,24 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
   const [emailSending, setEmailSending] = useState(false);
   const [emailFeedback, setEmailFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [reminderSending, setReminderSending] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const now = new Date();
     setPrintDateTime(now.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }));
   }, []);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [moreOpen]);
 
   const isQuote = invoice.type === "quote";
   const currency = invoice.currency || profile.currency;
@@ -378,14 +392,27 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
             )}
 
             {!isQuote && invoice.balanceDue > 0 && (
-              <>
-                <button
-                  onClick={() => openPaymentModal(false)}
-                  className="inline-flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors shadow-md shadow-indigo-600/10 cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" />
-                  Record Payment
-                </button>
+              <button
+                onClick={() => openPaymentModal(false)}
+                className="inline-flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors shadow-md shadow-indigo-600/10 cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                Record Payment
+              </button>
+            )}
+
+            <a
+              id="download-pdf-link"
+              href={`/api/invoices/${invoice.id}/pdf`}
+              className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Download</span> PDF
+            </a>
+
+            {/* Secondary actions: inline on desktop, collapsed into a "More" menu on mobile so the action row doesn't wrap into a wall of buttons. */}
+            <div className="hidden sm:contents">
+              {!isQuote && invoice.balanceDue > 0 && (
                 <button
                   onClick={() => openPaymentModal(true)}
                   className="inline-flex items-center justify-center gap-1.5 bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
@@ -393,53 +420,105 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                   <CheckCircle className="h-4 w-4" />
                   Mark Fully Paid
                 </button>
-              </>
-            )}
-
-            <button
-              onClick={() => setIsEditing(true)}
-              className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit
-            </button>
-
-            <button
-              onClick={handlePrint}
-              className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
-            >
-              <Printer className="h-4 w-4" />
-              Print
-            </button>
-
-            <a
-              id="download-pdf-link"
-              href={`/api/invoices/${invoice.id}/pdf`}
-              className="inline-flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20"
-            >
-              <Download className="h-4 w-4" />
-              Download PDF
-            </a>
-
-            <button
-              onClick={handleSendEmail}
-              disabled={emailSending}
-              className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer disabled:opacity-60"
-            >
-              {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-              Email to Client
-            </button>
-
-            {!isQuote && invoice.balanceDue > 0 && (
+              )}
               <button
-                onClick={handleSendReminder}
-                disabled={reminderSending}
-                className="inline-flex items-center justify-center gap-1.5 bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer disabled:opacity-60"
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
               >
-                {reminderSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />}
-                Send Reminder
+                <Edit2 className="h-4 w-4" />
+                Edit
               </button>
-            )}
+              <button
+                onClick={handlePrint}
+                className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
+              >
+                <Printer className="h-4 w-4" />
+                Print
+              </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={emailSending}
+                className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                Email to Client
+              </button>
+              {!isQuote && invoice.balanceDue > 0 && (
+                <button
+                  onClick={handleSendReminder}
+                  disabled={reminderSending}
+                  className="inline-flex items-center justify-center gap-1.5 bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer disabled:opacity-60"
+                >
+                  {reminderSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />}
+                  Send Reminder
+                </button>
+              )}
+            </div>
+
+            <div className="relative sm:hidden" ref={moreMenuRef}>
+              <button
+                onClick={() => setMoreOpen((o) => !o)}
+                aria-label="More actions"
+                className="inline-flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-55 text-slate-700 font-bold px-3 py-2 rounded-xl text-sm transition-colors cursor-pointer"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-slate-200 shadow-lg z-20 py-1.5 overflow-hidden">
+                  {!isQuote && invoice.balanceDue > 0 && (
+                    <button
+                      onClick={() => {
+                        setMoreOpen(false);
+                        openPaymentModal(true);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 text-left"
+                    >
+                      <CheckCircle className="h-4 w-4" /> Mark Fully Paid
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setMoreOpen(false);
+                      setIsEditing(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 text-left"
+                  >
+                    <Edit2 className="h-4 w-4" /> Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMoreOpen(false);
+                      handlePrint();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 text-left"
+                  >
+                    <Printer className="h-4 w-4" /> Print
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMoreOpen(false);
+                      handleSendEmail();
+                    }}
+                    disabled={emailSending}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 text-left disabled:opacity-60"
+                  >
+                    {emailSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Email to Client
+                  </button>
+                  {!isQuote && invoice.balanceDue > 0 && (
+                    <button
+                      onClick={() => {
+                        setMoreOpen(false);
+                        handleSendReminder();
+                      }}
+                      disabled={reminderSending}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-50 text-left disabled:opacity-60"
+                    >
+                      {reminderSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />} Send Reminder
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

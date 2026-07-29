@@ -141,36 +141,41 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Invoices &amp; Quotes</h1>
-          <p className="text-sm text-slate-500 mt-1">Browse, edit, and export your billing history.</p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight truncate">
+            <span className="sm:hidden">Invoices</span>
+            <span className="hidden sm:inline">Invoices &amp; Quotes</span>
+          </h1>
+          <p className="hidden sm:block text-sm text-slate-500 mt-1">Browse, edit, and export your billing history.</p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <button
             onClick={handleExportCsv}
-            className="inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl border border-slate-200 transition-all duration-150 active:scale-95 text-xs"
+            className="inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 transition-all duration-150 active:scale-95 text-xs shrink-0"
             title="Download Invoice Ledger CSV"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-            Export CSV
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
 
           <Link
             href="/invoices/new?type=quote"
-            className="inline-flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl transition-all duration-150 active:scale-95 text-sm"
+            className="inline-flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all duration-150 active:scale-95 text-sm shrink-0"
+            title="New Quote"
           >
             <FileText className="h-4 w-4" />
-            New Quote
+            <span className="hidden sm:inline">New Quote</span>
           </Link>
 
           <Link
             href="/invoices/new"
-            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm"
+            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm shrink-0"
           >
             <Plus className="h-4 w-4" />
-            New Invoice
+            <span className="sm:hidden">New</span>
+            <span className="hidden sm:inline">New Invoice</span>
           </Link>
         </div>
       </div>

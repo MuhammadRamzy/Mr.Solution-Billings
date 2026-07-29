@@ -250,31 +250,33 @@ export default function ExpensesList({ initialExpenses, profile }: ExpensesListP
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <TrendingDown className="h-7 w-7 text-indigo-600 shrink-0" />
-            Expense Ledger
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 whitespace-nowrap">
+            <TrendingDown className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-600 shrink-0" />
+            <span className="sm:hidden">Expenses</span>
+            <span className="hidden sm:inline">Expense Ledger</span>
           </h1>
-          <p className="text-xs text-slate-500 font-semibold mt-1">
+          <p className="hidden sm:block text-xs text-slate-500 font-semibold mt-1">
             Track software, equipment, travel, and other business overhead.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
             title="Export CSV Report"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-            Export CSV
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-indigo-600/10 active:scale-95"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-indigo-600/10 active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            Add Expense
+            <span className="sm:hidden">Add</span>
+            <span className="hidden sm:inline">Add Expense</span>
           </button>
         </div>
       </div>
