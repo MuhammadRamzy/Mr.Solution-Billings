@@ -1,4 +1,4 @@
-const CACHE_NAME = "mybilling-cache-v1";
+const CACHE_NAME = "mybilling-cache-v2";
 const OFFLINE_URLS = ["/dashboard", "/login", "/logo_with_bg.png", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
