@@ -16,10 +16,15 @@ let dbInstance: Firestore;
 try {
   // Serverless platforms (Vercel included) often run in network environments
   // where the Firestore SDK's default gRPC/WebChannel transport stalls or
-  // never completes its handshake. Auto-detecting long-polling avoids that -
-  // it's the standard fix for Firestore client SDK use in serverless backends.
+  // never completes its handshake. Auto-detect was tried first, but on
+  // Vercel writes were consistently hanging until timeout (confirmed via
+  // direct testing: identical code writes in ~1s from a normal network but
+  // hangs for the full 8s timeout from a Vercel function) while reads worked
+  // fine - auto-detection was picking the wrong transport for the write/
+  // commit stream specifically. Forcing long-polling skips that unreliable
+  // detection probe entirely.
   dbInstance = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
   });
 } catch {
   // initializeFirestore throws if it's already been called for this app
