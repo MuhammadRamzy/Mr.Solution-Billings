@@ -194,10 +194,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <div className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
-              <span className="sm:hidden">Billed</span>
-              <span className="hidden sm:inline">Billed This Month</span>
-            </span>
+            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Billed</span>
             <div className="p-1.5 sm:p-2 bg-indigo-50 rounded-lg text-indigo-650 group-hover:scale-110 transition-transform duration-200 shrink-0">
               <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
@@ -250,10 +247,7 @@ export default async function DashboardPage() {
 
         <div className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
-              <span className="sm:hidden">Net Profit</span>
-              <span className="hidden sm:inline">Net Profit (Month)</span>
-            </span>
+            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Net Profit</span>
             <div
               className={cn(
                 "p-1.5 sm:p-2 rounded-lg group-hover:scale-110 transition-transform shrink-0",

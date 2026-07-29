@@ -209,7 +209,7 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
           <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
         </button>
 
-        <div className={cn(filtersOpen ? "grid" : "hidden", "sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 pt-2")}>
+        <div className={cn(filtersOpen ? "grid" : "hidden", "sm:grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 pt-2")}>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Type</label>
             <select
@@ -310,7 +310,7 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
         </div>
       ) : (
         <>
-          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="hidden xl:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto w-full">
               <table className="w-full border-collapse text-left text-sm text-slate-600">
                 <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
@@ -391,7 +391,7 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
             </div>
           </div>
 
-          <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="xl:hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginatedInvoices.map((inv) => (
               <div key={inv.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3 relative">
                 <div className="flex items-center justify-between pr-8">
