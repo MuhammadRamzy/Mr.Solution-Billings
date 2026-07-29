@@ -8,14 +8,24 @@ import { getFirestore, type Firestore } from "firebase-admin/firestore";
 // for the full configured timeout every time as a Vercel function, even
 // after forcing long-polling). The Admin SDK talks to Firestore over native
 // gRPC meant for server environments and doesn't have this failure mode.
-function getServiceAccount() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (!raw) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not set");
+//
+// Credentials are three separate env vars rather than one JSON blob - a
+// single-line JSON string containing a multi-line PEM private key is fragile
+// to paste into a web form (confirmed: it broke twice pasting into Vercel's
+// dashboard, since real newlines and JSON string-escaped newlines look
+// identical but aren't). A plain env var holding just the key, with escaped
+// \n sequences un-escaped in code, survives copy/paste intact either way.
+function getCredential() {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY;
+  if (!projectId || !clientEmail || !rawKey) {
+    throw new Error("FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY must all be set");
   }
-  return JSON.parse(raw);
+  const privateKey = rawKey.replace(/\\n/g, "\n");
+  return { projectId, clientEmail, privateKey };
 }
 
-const app: App = getApps().length === 0 ? initializeApp({ credential: cert(getServiceAccount()) }) : getApps()[0];
+const app: App = getApps().length === 0 ? initializeApp({ credential: cert(getCredential()) }) : getApps()[0];
 
 export const adminDb: Firestore = getFirestore(app);
