@@ -577,7 +577,12 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
             </div>
           </div>
 
-          <div className="py-2 overflow-x-auto w-full">
+          {/* Line items: a full data table on tablet/desktop/print, a stacked
+              card list on phones - an 8-column table has no readable way to
+              fit a ~375px screen, even with horizontal scroll (the amount
+              column, the one figure that matters most, ends up hidden
+              off-screen by default). */}
+          <div className="hidden sm:block py-2 overflow-x-auto w-full">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-indigo-50/70 print:bg-indigo-50">
@@ -625,6 +630,38 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
             </table>
           </div>
 
+          <div className="sm:hidden py-2 space-y-3">
+            {invoice.lineItems.map((item) => (
+              <div key={item.slNo} className="border-b border-slate-100 pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-bold text-slate-900 text-xs">{item.description}</div>
+                    <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      {item.quantity} {item.unit} &times; {formatCurrency(item.rate, currency)}
+                      {item.discountPercent > 0 && <span className="text-rose-500"> &bull; -{item.discountPercent}%</span>}
+                    </div>
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-[10px] font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2 mt-0.5 truncate"
+                      >
+                        {item.url}
+                      </a>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-bold text-slate-900 text-xs">{formatCurrency(item.amount, currency)}</div>
+                    {item.taxAmount > 0 && (
+                      <div className="text-[10px] text-slate-400 mt-0.5">+{formatCurrency(item.taxAmount, currency)} tax</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start pt-6 print:break-inside-avoid">
             <div className="sm:col-span-7 space-y-4">
               {invoice.notes && invoice.display.showNotes && (
@@ -641,13 +678,13 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                   <div className="text-[9px] text-indigo-600 font-bold uppercase tracking-wider flex items-center gap-1 mb-2.5">
                     <Wallet className="h-3.5 w-3.5" /> Payment Details
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 space-y-2">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                    <div className="flex-1 w-full space-y-2">
                       {invoice.paymentInstructions && (
                         <p className="text-slate-600 whitespace-pre-line">{invoice.paymentInstructions}</p>
                       )}
                       {profile.bank.accountNo && (
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-700">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-slate-700">
                           {profile.bank.bankName && (
                             <div>
                               <span className="text-[9px] text-slate-400 font-medium block">Bank</span>

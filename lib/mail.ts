@@ -42,7 +42,7 @@ function payButtonHtml(upiUri: string | null) {
     </div>`;
 }
 
-function buildEmailHtml(opts: {
+export function buildEmailHtml(opts: {
   invoice: Invoice;
   profile: BusinessProfile;
   hasQrCid: boolean;
@@ -55,17 +55,19 @@ function buildEmailHtml(opts: {
   const currency = invoice.currency || profile.currency;
   const fmt = (n: number) => formatCurrency(n, currency);
 
+  // Two columns, not four - a rigid Description/Qty/Rate/Amount grid forces
+  // the description into an unreadably narrow wrap on a phone-width inbox.
+  // Qty/rate move into a small meta line under the description instead.
   const rowsHtml = invoice.lineItems
     .map(
       (item) => `
       <tr>
-        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:600;">
-          ${item.description}
-          ${item.url ? `<br/><a href="${item.url}" style="font-size:11px;font-weight:500;color:${ACCENT};text-decoration:none;">${item.url}</a>` : ""}
+        <td style="padding:12px;border-bottom:1px solid #e2e8f0;vertical-align:top;">
+          <div style="font-size:13px;color:#0f172a;font-weight:600;">${item.description}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${item.quantity} ${item.unit} &times; ${fmt(item.rate)}${item.discountPercent > 0 ? ` &bull; -${item.discountPercent}%` : ""}</div>
+          ${item.url ? `<a href="${item.url}" style="font-size:11px;font-weight:500;color:${ACCENT};text-decoration:none;">${item.url}</a>` : ""}
         </td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#475569;text-align:right;">${item.quantity} ${item.unit}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#475569;text-align:right;">${fmt(item.rate)}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:700;text-align:right;">${fmt(item.amount)}</td>
+        <td style="padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#0f172a;font-weight:700;text-align:right;vertical-align:top;white-space:nowrap;">${fmt(item.amount)}</td>
       </tr>`
     )
     .join("");
@@ -135,15 +137,15 @@ function buildEmailHtml(opts: {
   <div style="background:#f1f5f9;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
       <tr>
-        <td style="background:#0f172a;padding:24px 28px;">
+        <td style="background:#0f172a;padding:26px 28px;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            ${hasLogoCid ? `<td style="padding-right:10px;vertical-align:middle;"><img src="cid:businesslogo" alt="${profile.name}" width="34" height="34" style="border-radius:8px;background:#ffffff;display:block;object-fit:contain;" /></td>` : ""}
+            ${hasLogoCid ? `<td style="padding-right:14px;vertical-align:middle;"><table role="presentation" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;"><tr><td style="padding:8px;"><img src="cid:businesslogo" alt="${profile.name}" width="40" height="40" style="display:block;object-fit:contain;" /></td></tr></table></td>` : ""}
             <td style="vertical-align:middle;">
-              <span style="color:#ffffff;font-size:18px;font-weight:800;">${profile.name}</span>
+              <span style="color:#ffffff;font-size:21px;font-weight:800;letter-spacing:-0.01em;">${profile.name}</span>
             </td>
           </tr></table>
-          <div style="margin-top:8px;">
-            <span style="display:inline-block;background:${isReminder ? "#dc2626" : ACCENT};color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:4px 10px;border-radius:999px;">
+          <div style="margin-top:12px;">
+            <span style="display:inline-block;background:${isReminder ? "#dc2626" : ACCENT};color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;padding:5px 12px;border-radius:999px;">
               ${badgeText}
             </span>
           </div>
@@ -157,8 +159,6 @@ function buildEmailHtml(opts: {
             <thead>
               <tr style="background:#f8fafc;">
                 <th align="left" style="padding:10px 12px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Description</th>
-                <th align="right" style="padding:10px 12px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Qty</th>
-                <th align="right" style="padding:10px 12px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Rate</th>
                 <th align="right" style="padding:10px 12px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Amount</th>
               </tr>
             </thead>
