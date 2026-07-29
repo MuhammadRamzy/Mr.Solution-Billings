@@ -19,9 +19,9 @@ function getCredential() {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const rawKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (!projectId || !clientEmail || !rawKey) {
-    throw new Error("FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY must all be set");
-  }
+  if (!projectId) throw new Error("Missing required env var: FIREBASE_PROJECT_ID");
+  if (!clientEmail) throw new Error("Missing required env var: FIREBASE_CLIENT_EMAIL");
+  if (!rawKey) throw new Error("Missing required env var: FIREBASE_PRIVATE_KEY");
   const privateKey = rawKey.replace(/\\n/g, "\n");
   return { projectId, clientEmail, privateKey };
 }
