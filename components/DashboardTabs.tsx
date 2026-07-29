@@ -80,7 +80,7 @@ export default function DashboardTabs({
   const totalInvoiceCount = Object.values(statusBreakdown).reduce((acc, s) => acc + s.count, 0);
 
   const renderTrendChart = () => (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 shadow-sm space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -138,7 +138,7 @@ export default function DashboardTabs({
   );
 
   const renderStatusSummary = () => (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 shadow-sm space-y-4">
       <h2 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
         <PieChart className="h-5 w-5 text-indigo-600" />
         Invoice Status Breakdown
@@ -192,7 +192,7 @@ export default function DashboardTabs({
   );
 
   const renderProfitability = () => (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm space-y-6">
+    <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 shadow-sm space-y-6">
       <div>
         <h2 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
           <Percent className="h-5 w-5 text-indigo-650" />
@@ -245,7 +245,7 @@ export default function DashboardTabs({
   );
 
   const renderTopClients = () => (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 sm:p-6 shadow-sm space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-6 shadow-sm space-y-4">
       <h2 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
         <Users className="h-5 w-5 text-indigo-650" />
         Top Clients by Revenue
@@ -358,49 +358,51 @@ export default function DashboardTabs({
         <button
           onClick={() => setActiveTab("overview")}
           className={cn(
-            "flex-1 min-w-[90px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
+            "flex-1 min-w-[70px] sm:min-w-[90px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
             activeTab === "overview" ? "bg-white text-slate-900 shadow-sm border border-slate-200/50" : "text-slate-500 hover:text-slate-800"
           )}
         >
-          <BarChart3 className="h-4 w-4" />
+          <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           Overview
         </button>
 
         <button
           onClick={() => setActiveTab("profitability")}
           className={cn(
-            "flex-1 min-w-[120px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
+            "flex-1 min-w-[70px] sm:min-w-[120px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
             activeTab === "profitability" ? "bg-white text-slate-900 shadow-sm border border-slate-200/50" : "text-slate-500 hover:text-slate-800"
           )}
         >
-          <Percent className="h-4 w-4" />
-          Profitability
+          <Percent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="sm:hidden">Profit</span>
+          <span className="hidden sm:inline">Profitability</span>
         </button>
 
         <button
           onClick={() => setActiveTab("leaderboards")}
           className={cn(
-            "flex-1 min-w-[100px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
+            "flex-1 min-w-[70px] sm:min-w-[100px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
             activeTab === "leaderboards" ? "bg-white text-slate-900 shadow-sm border border-slate-200/50" : "text-slate-500 hover:text-slate-800"
           )}
         >
-          <Users className="h-4 w-4" />
+          <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           Clients
         </button>
 
         <button
           onClick={() => setActiveTab("recent")}
           className={cn(
-            "flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
+            "flex-1 min-w-[70px] sm:min-w-[80px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
             activeTab === "recent" ? "bg-white text-slate-900 shadow-sm border border-slate-200/50" : "text-slate-500 hover:text-slate-800"
           )}
         >
-          <Activity className="h-4 w-4" />
-          Activity Log
+          <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="sm:hidden">Activity</span>
+          <span className="hidden sm:inline">Activity Log</span>
         </button>
       </div>
 
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-200">
+      <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-200">
         {activeTab === "overview" && (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

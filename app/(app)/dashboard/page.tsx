@@ -149,19 +149,19 @@ export default async function DashboardPage() {
     .sort((a, b) => b.amount - a.amount);
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-8 pb-12">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+          <p className="hidden sm:block text-sm text-slate-500 mt-1">
             Revenue, expenses, and profitability at a glance.
           </p>
         </div>
         <Link
           href="/invoices/new"
-          className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-xs self-start sm:self-auto animate-fade-in"
+          className="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-xs animate-fade-in shrink-0"
         >
-          <Plus className="h-4.5 w-4.5" />
+          <Plus className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           New Invoice
         </Link>
       </div>
@@ -192,9 +192,12 @@ export default async function DashboardPage() {
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Billed This Month</span>
+            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
+              <span className="sm:hidden">Billed</span>
+              <span className="hidden sm:inline">Billed This Month</span>
+            </span>
             <div className="p-1.5 sm:p-2 bg-indigo-50 rounded-lg text-indigo-650 group-hover:scale-110 transition-transform duration-200 shrink-0">
               <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
@@ -210,7 +213,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
           <div className="flex items-center justify-between">
             <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Outstanding</span>
             <div className="p-1.5 sm:p-2 bg-amber-50 rounded-lg text-amber-600 group-hover:scale-110 transition-transform duration-200 shrink-0">
@@ -227,7 +230,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
           <div className="flex items-center justify-between">
             <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Expenses</span>
             <div className="p-1.5 sm:p-2 bg-rose-50 rounded-lg text-rose-600 group-hover:scale-110 transition-transform duration-200 shrink-0">
@@ -245,9 +248,12 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+        <div className="bg-white rounded-2xl border border-slate-100 p-2.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">Net Profit (Month)</span>
+            <span className="text-[9px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
+              <span className="sm:hidden">Net Profit</span>
+              <span className="hidden sm:inline">Net Profit (Month)</span>
+            </span>
             <div
               className={cn(
                 "p-1.5 sm:p-2 rounded-lg group-hover:scale-110 transition-transform shrink-0",

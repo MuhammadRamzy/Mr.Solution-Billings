@@ -11,6 +11,8 @@ import {
   FileSpreadsheet,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  SlidersHorizontal,
   Trash2,
   FileText,
 } from "lucide-react";
@@ -46,6 +48,15 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc" | "invoice_no">("date_desc");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount = [
+    selectedType !== "all",
+    selectedStatus !== "all",
+    selectedClientId !== "all",
+    !!startDate,
+    !!endDate,
+  ].filter(Boolean).length;
 
   const filteredInvoices = invoices
     .filter((inv) => {
@@ -176,7 +187,24 @@ export default function InvoicesList({ initialInvoices, clients, profile }: Invo
           />
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 pt-2">
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((o) => !o)}
+          className="sm:hidden w-full flex items-center justify-between text-xs font-bold text-slate-600 py-1"
+        >
+          <span className="flex items-center gap-1.5">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-indigo-600 text-white text-[9px]">
+                {activeFilterCount}
+              </span>
+            )}
+          </span>
+          <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
+        </button>
+
+        <div className={cn(filtersOpen ? "grid" : "hidden", "sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 pt-2")}>
           <div>
             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Type</label>
             <select

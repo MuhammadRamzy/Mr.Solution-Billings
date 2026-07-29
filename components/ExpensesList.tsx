@@ -15,6 +15,8 @@ import {
   DollarSign,
   Receipt,
   CreditCard,
+  ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Expense, BusinessProfile } from "@/lib/types";
 import { formatCurrency, formatDate, cn, exportToCsv } from "@/lib/utils";
@@ -60,6 +62,9 @@ export default function ExpensesList({ initialExpenses, profile }: ExpensesListP
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount = [selectedCategory !== "all", selectedPaymentMode !== "all", !!startDate, !!endDate].filter(Boolean).length;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -301,18 +306,35 @@ export default function ExpensesList({ initialExpenses, profile }: ExpensesListP
       </div>
 
       <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search description, vendor, reference no..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-slate-50/50 hover:bg-white rounded-xl text-xs w-full transition-colors outline-none font-medium text-slate-800"
-            />
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search description, vendor, reference no..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-4 py-2 border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-slate-50/50 hover:bg-white rounded-xl text-xs w-full transition-colors outline-none font-medium text-slate-800"
+          />
+        </div>
 
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((o) => !o)}
+          className="sm:hidden w-full flex items-center justify-between text-xs font-bold text-slate-600 py-1"
+        >
+          <span className="flex items-center gap-1.5">
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-indigo-600 text-white text-[9px]">
+                {activeFilterCount}
+              </span>
+            )}
+          </span>
+          <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
+        </button>
+
+        <div className={cn(filtersOpen ? "grid" : "hidden", "sm:grid grid-cols-1 md:grid-cols-2 gap-3")}>
           <div className="grid grid-cols-2 gap-2">
             <select
               value={selectedCategory}
