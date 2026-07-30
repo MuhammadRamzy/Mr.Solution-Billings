@@ -16,7 +16,7 @@ import {
   getInvoices,
   saveInvoice,
 } from "@/lib/db";
-import { Contractor, ContractorSchema, Contract, ContractSchema, ContractorPayment, ContractorPaymentSchema, Client } from "@/lib/types";
+import { Contractor, ContractorSchema, Contract, ContractSchema, ContractorPayment, ContractorPaymentSchema, Client, InvoiceSchema } from "@/lib/types";
 
 // Next.js redacts thrown Server Action error messages in production builds,
 // so every action here catches its own errors and returns { success, error }
@@ -298,7 +298,8 @@ export async function convertQuoteToContractAction(quoteId: string) {
 
     quote.convertedToContractId = validated.id;
     quote.updatedAt = new Date().toISOString();
-    await saveInvoice(quote);
+    const validatedQuote = InvoiceSchema.parse(quote);
+    await saveInvoice(validatedQuote);
 
     revalidatePath("/contracts");
     revalidatePath("/invoices");
