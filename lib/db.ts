@@ -58,6 +58,7 @@ const DEFAULT_PROFILE: BusinessProfile = {
   logoUrl: "/logo_without_bg.png",
   invoicePrefix: "INV",
   quotePrefix: "QUO",
+  contractPrefix: "SYS-CON",
   currency: "INR",
   defaultTaxPercent: 0,
   defaultTaxLabel: "Tax",
@@ -133,13 +134,13 @@ export async function deleteInvoice(id: string): Promise<void> {
 
 // Counters Operations
 export const getCounters = cache(async (): Promise<Counters> => {
-  const defaultCounters: Counters = { invoiceCounters: {}, quoteCounters: {} };
+  const defaultCounters: Counters = { invoiceCounters: {}, quoteCounters: {}, contractCounters: {} };
   try {
     const docRef = adminDb.collection("settings").doc("counters");
     const docSnap = await withTimeout(docRef.get(), "read (settings/counters)");
     if (docSnap.exists) {
       const data = docSnap.data()!;
-      return { invoiceCounters: data.invoiceCounters || {}, quoteCounters: data.quoteCounters || {} };
+      return { invoiceCounters: data.invoiceCounters || {}, quoteCounters: data.quoteCounters || {}, contractCounters: data.contractCounters || {} };
     }
   } catch (error) {
     console.error("Error reading counters from Firestore:", error);
