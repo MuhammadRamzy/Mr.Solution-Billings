@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { adminDb } from "./firebase-admin";
-import { BusinessProfile, Client, Invoice, Counters, Expense } from "./types";
+import { BusinessProfile, Client, Invoice, Counters, Expense, Contractor, Contract } from "./types";
 
 // Reads are memoized per-request via React's cache() so calling e.g.
 // getBusinessProfile() from both the layout and a page only hits Firestore
@@ -171,6 +171,48 @@ export async function saveExpense(expense: Expense): Promise<void> {
 
 export async function deleteExpense(id: string): Promise<void> {
   await withTimeout(adminDb.collection("expenses").doc(id).delete(), "delete (expenses)");
+}
+
+// Contractor Operations
+export const getContractors = cache(async (): Promise<Contractor[]> => {
+  try {
+    const querySnapshot = await withTimeout(adminDb.collection("contractors").get(), "read (contractors)");
+    const list: Contractor[] = [];
+    querySnapshot.forEach((d) => list.push(d.data() as Contractor));
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Error reading contractors from Firestore:", error);
+    return [];
+  }
+});
+
+export async function saveContractor(contractor: Contractor): Promise<void> {
+  await withTimeout(adminDb.collection("contractors").doc(contractor.id).set(contractor), "write (contractors)");
+}
+
+export async function deleteContractor(id: string): Promise<void> {
+  await withTimeout(adminDb.collection("contractors").doc(id).delete(), "delete (contractors)");
+}
+
+// Contract Operations
+export const getContracts = cache(async (): Promise<Contract[]> => {
+  try {
+    const querySnapshot = await withTimeout(adminDb.collection("contracts").get(), "read (contracts)");
+    const list: Contract[] = [];
+    querySnapshot.forEach((d) => list.push(d.data() as Contract));
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (error) {
+    console.error("Error reading contracts from Firestore:", error);
+    return [];
+  }
+});
+
+export async function saveContract(contract: Contract): Promise<void> {
+  await withTimeout(adminDb.collection("contracts").doc(contract.id).set(contract), "write (contracts)");
+}
+
+export async function deleteContract(id: string): Promise<void> {
+  await withTimeout(adminDb.collection("contracts").doc(id).delete(), "delete (contracts)");
 }
 
 // Authentication Password Hash Operations
