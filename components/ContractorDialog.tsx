@@ -15,6 +15,7 @@ interface ContractorDialogProps {
 
 const PAYMENT_METHODS: { value: Contractor["preferredPaymentMethod"]; label: string }[] = [
   { value: "bank", label: "Bank Transfer" },
+  { value: "card", label: "Card" },
   { value: "upi", label: "UPI" },
   { value: "cash", label: "Cash" },
   { value: "paypal", label: "PayPal" },
