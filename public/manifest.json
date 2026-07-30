@@ -1,7 +1,7 @@
 {
-  "name": "MyBilling",
-  "short_name": "MyBilling",
-  "description": "Billing, invoicing, quotes, and expense tracking for freelance businesses",
+  "name": "Systemiq Billing",
+  "short_name": "Systemiq",
+  "description": "Billing, invoicing, quotes, and expense tracking for Systemiq",
   "start_url": "/dashboard",
   "display": "standalone",
   "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],

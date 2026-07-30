@@ -34,7 +34,7 @@ function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
 }
 
 const DEFAULT_PROFILE: BusinessProfile = {
-  name: "Mr.Solutions",
+  name: "Systemiq",
   tagline: "",
   address: "",
   city: "",
@@ -44,7 +44,7 @@ const DEFAULT_PROFILE: BusinessProfile = {
   taxId: "",
   phone: "",
   email: "",
-  website: "",
+  website: "https://systemiq.in",
   bank: {
     bankName: "",
     accountName: "",

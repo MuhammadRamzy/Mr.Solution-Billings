@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MyBilling",
-  description: "Billing, invoicing, quotes, and expense tracking for freelance businesses",
+  title: "Systemiq Billing",
+  description: "Billing, invoicing, quotes, and expense tracking for Systemiq",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MyBilling",
+    title: "Systemiq",
   },
   icons: {
     apple: "/icon-192.png",
