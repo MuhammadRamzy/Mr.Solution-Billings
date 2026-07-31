@@ -13,6 +13,8 @@ import {
   Settings,
   Receipt,
   LogOut,
+  Briefcase,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BusinessProfile } from "@/lib/types";
@@ -22,6 +24,8 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/invoices", label: "Invoices", icon: FileSpreadsheet },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/contracts", label: "Contracts", icon: Briefcase },
+  { href: "/contractors", label: "Contractors", icon: UserCog },
   { href: "/expenses", label: "Expenses", icon: Receipt },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -74,6 +78,12 @@ export default function Navbar({ profile }: { profile: BusinessProfile }) {
         } else if (key === "5") {
           e.preventDefault();
           router.push("/settings");
+        } else if (key === "6") {
+          e.preventDefault();
+          router.push("/contracts");
+        } else if (key === "7") {
+          e.preventDefault();
+          router.push("/contractors");
         } else if (key === "n") {
           e.preventDefault();
           router.push("/invoices/new");
@@ -312,6 +322,14 @@ export default function Navbar({ profile }: { profile: BusinessProfile }) {
               <div className="flex justify-between items-center">
                 <span>Go to Settings</span>
                 <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-600 shadow-sm">Alt + Shift + 5</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Go to Contracts</span>
+                <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-600 shadow-sm">Alt + Shift + 6</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Go to Contractors</span>
+                <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-600 shadow-sm">Alt + Shift + 7</kbd>
               </div>
               <div className="flex justify-between items-center font-semibold text-slate-900 border-t pt-2 mt-2">
                 <span>Create New Invoice</span>
