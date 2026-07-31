@@ -23,6 +23,7 @@ import {
   Loader2,
   BellRing,
   MoreHorizontal,
+  Briefcase,
 } from "lucide-react";
 import { Invoice, BusinessProfile, Client, Payment } from "@/lib/types";
 import {
@@ -33,6 +34,7 @@ import {
   sendInvoiceEmailAction,
   sendPaymentReminderAction,
 } from "@/app/actions";
+import { convertQuoteToContractAction } from "@/app/contractActions";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import InvoiceForm from "./InvoiceForm";
 import Modal from "./Modal";
@@ -84,6 +86,7 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
   const [reminderSending, setReminderSending] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [convertingToContract, setConvertingToContract] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -140,6 +143,21 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
       alert(err.message || "Failed to convert quote to invoice");
     } finally {
       setStatusLoading(false);
+    }
+  };
+
+  const handleConvertToContract = async () => {
+    if (!confirm("Create an internal delivery contract from this accepted quote?")) return;
+    setConvertingToContract(true);
+    try {
+      const res = await convertQuoteToContractAction(invoice.id);
+      if (res.success) {
+        router.push(`/contracts/${res.contract.id}`);
+      } else {
+        alert(res.error || "Failed to convert quote to contract");
+      }
+    } finally {
+      setConvertingToContract(false);
     }
   };
 
@@ -312,6 +330,15 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
             </Link>
           </div>
         )}
+        {invoice.convertedToContractId && (
+          <div className="p-3 bg-indigo-50 border border-indigo-100 text-indigo-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            This quote was converted to an internal contract.{" "}
+            <Link href={`/contracts/${invoice.convertedToContractId}`} className="underline font-bold">
+              View the contract
+            </Link>
+          </div>
+        )}
         {invoice.convertedFromQuoteId && (
           <div className="p-3 bg-slate-50 border border-slate-100 text-slate-600 text-xs font-semibold rounded-xl flex items-center gap-2">
             Generated from a quote.{" "}
@@ -394,6 +421,16 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                 >
                   <ArrowRightCircle className="h-4 w-4" />
                   Convert
+                </button>
+              )}
+              {isQuote && invoice.status === "accepted" && !invoice.convertedToContractId && (
+                <button
+                  disabled={convertingToContract}
+                  onClick={handleConvertToContract}
+                  className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold px-3 py-2 rounded-xl text-sm transition-colors"
+                  title="Convert to Contract"
+                >
+                  <Briefcase className="h-4 w-4" />
                 </button>
               )}
               {!isQuote && invoice.balanceDue > 0 && (
@@ -494,6 +531,16 @@ export default function InvoiceDetailView({ invoice: initialInvoice, profile, cl
                 >
                   <ArrowRightCircle className="h-4 w-4" />
                   Convert to Invoice
+                </button>
+              )}
+              {isQuote && invoice.status === "accepted" && !invoice.convertedToContractId && (
+                <button
+                  disabled={convertingToContract}
+                  onClick={handleConvertToContract}
+                  className="inline-flex items-center justify-center gap-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  Convert to Contract
                 </button>
               )}
               {!isQuote && invoice.balanceDue > 0 && (
