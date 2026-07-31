@@ -132,13 +132,13 @@ export default function ContractsList({ initialContracts }: ContractsListProps) 
               const budget = calculateContractBudget(c);
               return (
                 <Link key={c.id} href={`/contracts/${c.id}`} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-black text-slate-900 text-sm">{c.contractNo}</span>
-                    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", STATUS_STYLES[c.status])}>{c.status.replace("_", " ")}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-black text-slate-900 text-sm truncate min-w-0">{c.contractNo}</span>
+                    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase shrink-0", STATUS_STYLES[c.status])}>{c.status.replace("_", " ")}</span>
                   </div>
-                  <div>
-                    <div className="font-bold text-slate-900">{c.projectName}</div>
-                    <div className="text-xs text-slate-500">{c.clientSnapshot.name}</div>
+                  <div className="min-w-0">
+                    <div className="font-bold text-slate-900 truncate">{c.projectName}</div>
+                    <div className="text-xs text-slate-500 truncate">{c.clientSnapshot.name}</div>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-slate-50 text-xs">
                     <span className="text-slate-400">Value: {formatCurrency(c.contractValue, "INR")}</span>

@@ -78,7 +78,8 @@ export default function ContractorsList({ initialContractors }: ContractorsListP
           className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-md shadow-indigo-600/10 transition-all duration-150 active:scale-95 text-sm shrink-0"
         >
           <Plus className="h-4 w-4" />
-          Add Contractor
+          <span className="sm:hidden">Add</span>
+          <span className="hidden sm:inline">Add Contractor</span>
         </button>
       </div>
 

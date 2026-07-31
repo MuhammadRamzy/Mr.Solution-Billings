@@ -305,7 +305,7 @@ export default function ContractForm({ clients, contractors, contract, preselect
             {assignments.length === 0 && <p className="text-xs text-slate-400 italic">No contractors assigned yet.</p>}
 
             {assignments.map((a) => (
-              <div key={a.id} className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr_auto] gap-3 items-end p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+              <div key={a.id} className="grid grid-cols-1 xl:grid-cols-[2fr_2fr_1fr_auto] gap-3 items-end p-3 rounded-xl border border-slate-100 bg-slate-50/50">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contractor</label>
                   <select
@@ -364,7 +364,7 @@ export default function ContractForm({ clients, contractors, contract, preselect
             {milestones.length === 0 && <p className="text-xs text-slate-400 italic">No milestones yet.</p>}
 
             {milestones.map((m) => (
-              <div key={m.id} className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 items-end p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+              <div key={m.id} className="grid grid-cols-1 xl:grid-cols-[2fr_1fr_1fr_minmax(112px,1.3fr)_auto] gap-3 items-end p-3 rounded-xl border border-slate-100 bg-slate-50/50">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Title</label>
                   <input
@@ -433,11 +433,11 @@ export default function ContractForm({ clients, contractors, contract, preselect
             <h2 className="text-base font-bold tracking-wide uppercase text-slate-400 border-b border-slate-800 pb-3">Budget Summary</h2>
 
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex flex-col gap-0.5 text-slate-400">
                 <span>Contract Value:</span>
                 <span className="font-semibold text-slate-200">{formatCurrency(Number(contractValue) || 0, "INR")}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex flex-col gap-0.5 text-slate-400">
                 <span>Allocated to Team:</span>
                 <span className="font-semibold text-rose-400">-{formatCurrency(budget.totalAllocated, "INR")}</span>
               </div>

@@ -343,11 +343,11 @@ export default function ContractDetailView({ contract: initialContract, client, 
               <Briefcase className="h-4 w-4" /> Budget
             </h2>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex flex-col gap-0.5 text-slate-400">
                 <span>Contract Value:</span>
                 <span className="font-semibold text-slate-200">{formatCurrency(contract.contractValue, "INR")}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex flex-col gap-0.5 text-slate-400">
                 <span>Allocated:</span>
                 <span className="font-semibold text-rose-400">-{formatCurrency(budget.totalAllocated, "INR")}</span>
               </div>
@@ -356,11 +356,11 @@ export default function ContractDetailView({ contract: initialContract, client, 
                 <span className={cn("text-xl font-black", budget.estimatedProfit >= 0 ? "text-emerald-400" : "text-rose-400")}>{formatCurrency(budget.estimatedProfit, "INR")}</span>
               </div>
               <div className="text-xs text-slate-500">{budget.profitMarginPercent.toFixed(1)}% margin</div>
-              <div className="border-t border-slate-800 pt-3 flex justify-between text-slate-400">
+              <div className="border-t border-slate-800 pt-3 flex flex-col gap-0.5 text-slate-400">
                 <span>Paid to Team:</span>
                 <span className="font-semibold text-emerald-400">{formatCurrency(budget.totalPaid, "INR")}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex flex-col gap-0.5 text-slate-400">
                 <span>Pending Payout:</span>
                 <span className="font-semibold text-amber-400">{formatCurrency(budget.totalPending, "INR")}</span>
               </div>
