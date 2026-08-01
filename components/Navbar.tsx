@@ -229,7 +229,7 @@ export default function Navbar({ profile }: { profile: BusinessProfile }) {
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 border-r border-slate-800 text-white flex-col justify-between print:hidden">
-        <div>
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="flex items-center gap-2.5 px-6 py-6 border-b border-slate-800">
             <div className="bg-white p-1 rounded-lg shrink-0 flex items-center justify-center h-9 w-9 overflow-hidden">
               <BrandMark profile={profile} className="h-7 w-7 text-base" />
